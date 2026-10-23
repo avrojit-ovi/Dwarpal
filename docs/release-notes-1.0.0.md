@@ -3,8 +3,8 @@
 First complete release of Dwarpal, a Windows app locker that stands in front of the programs you
 choose with a full-screen lock screen, a PIN or password, and an audit trail.
 
-> Draft: the checkout this was prepared from has no Git remote or commits yet, so no GitHub release
-> or signed binary has been published. Use the checklist in the README before tagging.
+> Unsigned build: Windows SmartScreen may warn and Smart App Control can block it. See
+> [Code signing](https://github.com/avrojit-ovi/Dwarpal#code-signing) before rolling it out widely.
 
 ## Highlights
 

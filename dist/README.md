@@ -1,8 +1,8 @@
 # Release artifacts
 
-Prebuilt binaries for **Dwarpal 1.0.0**. The source of truth for a release is the matching
-[GitHub release](https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0); these files are
-committed so the repository is usable without a release download.
+Prebuilt binaries for **Dwarpal 1.0.0**, byte-for-byte identical to the assets on the matching
+[GitHub release](https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0). They are committed so
+the repository is usable without a release download; the release remains the source of truth.
 
 | File | What it is |
 | --- | --- |

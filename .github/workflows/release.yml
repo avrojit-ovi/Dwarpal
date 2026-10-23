@@ -76,7 +76,12 @@ jobs:
             "{0}  {1}" -f (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower(), $file.Name
           }
 
-          $lines | Set-Content -Path "installer/Output/SHA256SUMS.txt" -Encoding ascii
+          # LF only, so sha256sum -c works on Linux/macOS as well as Get-FileHash on Windows.
+          $content = ($lines -join "`n") + "`n"
+          [System.IO.File]::WriteAllText(
+            (Join-Path (Get-Location) "installer/Output/SHA256SUMS.txt"),
+            $content,
+            [System.Text.Encoding]::ASCII)
           Get-Content "installer/Output/SHA256SUMS.txt"
 
       - name: Upload build artifacts

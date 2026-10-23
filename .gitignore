@@ -1,0 +1,54 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Inno Setup output: only the built setup executable is tracked in git
+installer/Output/*
+!installer/Output/*.exe
+*.msi
+
+# Local probe/verification harnesses (not part of the product)
+.smoke/
+
+# Local data / secrets
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+*.log
+logs/
+selfies/
+
+# OS noise
+Thumbs.db
+Desktop.ini
+.DS_Store

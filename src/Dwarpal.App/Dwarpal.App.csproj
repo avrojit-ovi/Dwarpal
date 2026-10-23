@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>Dwarpal.App</RootNamespace>
+    <AssemblyName>Dwarpal</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Branding\dwarpal.ico</ApplicationIcon>
+    <!-- WFAC010: WPF app er jonno DPI awareness manifest e thakai correct; WinForms analyzer false positive. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <Version>1.0.0</Version>
+    <Authors>Dwarpal</Authors>
+    <Product>Dwarpal</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WPF ar WinForms duijon er global usings e "Application" ambiguously resolve hoy. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Branding\*.png" />
+    <Resource Include="Assets\Branding\*.png" />
+    <Resource Include="Assets\Branding\dwarpal.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dwarpal.Core\Dwarpal.Core.csproj" />
+  </ItemGroup>
+
+</Project>

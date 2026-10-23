@@ -1,0 +1,292 @@
+<Window x:Class="Dwarpal.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:Dwarpal.App.Views"
+        mc:Ignorable="d"
+        Title="Dwarpal"
+        Width="1120" Height="740"
+        MinWidth="960" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Opacity="0"
+        ResizeMode="CanResize"
+        Style="{StaticResource AppWindow}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      ResizeBorderThickness="6"
+                      CornerRadius="14"
+                      GlassFrameThickness="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="Foreground" Value="{StaticResource InkSecondaryBrush}" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NavIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="NavLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="14"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            Background="{StaticResource WindowBackgroundBrush}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="236" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ============ Sidebar ============ -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderSoftBrush}"
+                    BorderThickness="0,0,1,0"
+                    CornerRadius="14,0,0,14">
+                <Grid Margin="20,26,20,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Border Width="40" Height="40"
+                                CornerRadius="11"
+                                Background="{StaticResource Navy950Brush}"
+                                BorderBrush="{StaticResource BorderSoftBrush}"
+                                BorderThickness="1"
+                                Padding="2">
+                            <Image Source="pack://application:,,,/Dwarpal;component/Assets/Branding/dwarpal-mark-512.png"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Margin="11,0,0,0">
+                            <TextBlock Text="DWARPAL" FontSize="14" FontWeight="SemiBold" />
+                            <TextBlock Text="APP LOCKER" Style="{StaticResource MutedText}" FontSize="8.5" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Margin="0,34,0,0">
+                        <TextBlock Text="WORKSPACE" Style="{StaticResource MutedText}" FontSize="9" Margin="12,0,0,10" />
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="dashboard">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDashboard}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE80F;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Dashboard" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="protected-apps">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsProtectedApps}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE72E;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Protected Apps" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="profiles">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsProfiles}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE716;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Profiles" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="schedule">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSchedule}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE787;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Schedule" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="activity">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActivity}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE81C;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Activity Log" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateCommand}" CommandParameter="settings">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSettings}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource GoldTintBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}" />
+                                            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE713;" Style="{StaticResource NavIcon}" />
+                                <TextBlock Text="Settings" Style="{StaticResource NavLabel}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="14" Background="{StaticResource WindowBackgroundBrush}">
+                        <StackPanel>
+                            <TextBlock Text="ACCOUNT SECURED" Style="{StaticResource OverlineText}" FontSize="9" />
+                            <TextBlock Text="PIN + recovery key set." Style="{StaticResource MutedText}" Margin="0,6,0,0" FontSize="11.5" />
+                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource MutedText}" Margin="0,10,0,0" FontSize="10.5" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ============ Main content ============ -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="68" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="OnDragAreaMouseDown">
+                    <StackPanel VerticalAlignment="Center" Margin="28,0,0,0">
+                        <TextBlock Text="{Binding PageTitle}" Style="{StaticResource TitleText}" />
+                        <TextBlock Text="{Binding PageSubtitle}" Style="{StaticResource MutedText}" FontSize="11.5" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <Border Background="{StaticResource GoldTintBrush}"
+                                BorderBrush="{StaticResource GoldBrush}"
+                                BorderThickness="1"
+                                CornerRadius="20"
+                                Padding="12,5"
+                                Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="SETUP COMPLETE" Style="{StaticResource OverlineText}" FontSize="9" Margin="7,0,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Button Style="{StaticResource TitleBarButton}" Content="&#xE921;" ToolTip="Minimize" Click="OnMinimizeClick" />
+                        <Button Style="{StaticResource TitleBarCloseButton}" Content="&#xE8BB;" ToolTip="Close" Click="OnCloseClick" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <!-- Wrapper Grid e visibility binding: DataContext set korle seita o dashboard VM hoye jeto. -->
+                    <Grid Visibility="{Binding IsDashboard, Converter={StaticResource BoolToVisibility}}">
+                        <views:DashboardView DataContext="{Binding Dashboard}" />
+                    </Grid>
+
+                    <Grid Visibility="{Binding IsProtectedApps, Converter={StaticResource BoolToVisibility}}">
+                        <views:ProtectedAppsView DataContext="{Binding ProtectedApps}" />
+                    </Grid>
+
+                    <Grid Visibility="{Binding IsProfiles, Converter={StaticResource BoolToVisibility}}">
+                        <views:ProfilesView DataContext="{Binding Profiles}" />
+                    </Grid>
+
+                    <Grid Visibility="{Binding IsSchedule, Converter={StaticResource BoolToVisibility}}">
+                        <views:ScheduleView DataContext="{Binding Schedule}" />
+                    </Grid>
+
+                    <Grid Visibility="{Binding IsActivity, Converter={StaticResource BoolToVisibility}}">
+                        <views:ActivityView DataContext="{Binding Activity}" />
+                    </Grid>
+
+                    <Grid Visibility="{Binding IsSettings, Converter={StaticResource BoolToVisibility}}">
+                        <views:SettingsView DataContext="{Binding Settings}" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

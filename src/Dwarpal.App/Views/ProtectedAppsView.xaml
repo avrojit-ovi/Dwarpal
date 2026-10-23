@@ -1,0 +1,147 @@
+<UserControl x:Class="Dwarpal.App.Views.ProtectedAppsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="820">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0,28,24">
+        <StackPanel>
+            <Grid>
+                <StackPanel>
+                    <TextBlock Text="Protected apps" Style="{StaticResource HeroText}" FontSize="24" />
+                    <TextBlock Text="{Binding Count, StringFormat={}{0} app in your guard list}"
+                               Style="{StaticResource MutedText}"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+
+                <Button Content="+ Add app"
+                        Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Click="OnAddAppClick" />
+            </Grid>
+
+            <TextBlock Text="{Binding StatusMessage}"
+                       Margin="0,14,0,0"
+                       FontSize="12">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsStatusError}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <!-- Empty state -->
+            <Border Style="{StaticResource CardBorder}"
+                    Margin="0,18,0,0"
+                    Padding="30"
+                    Visibility="{Binding HasNoApps, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel HorizontalAlignment="Center">
+                    <Border Width="56" Height="56" CornerRadius="18"
+                            Background="{StaticResource GoldTintBrush}"
+                            BorderBrush="{StaticResource GoldBrush}"
+                            BorderThickness="1"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE72E;"
+                                   FontFamily="{StaticResource IconFont}"
+                                   FontSize="22"
+                                   Foreground="{StaticResource GoldSoftBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="No apps protected yet"
+                               Style="{StaticResource TitleText}"
+                               HorizontalAlignment="Center"
+                               Margin="0,16,0,0" />
+                    <TextBlock Text="Installed app list theke bacho, othoba .exe browse koro. Lock kora app open korle Dwarpal full-screen lock screen dekhbe."
+                               Style="{StaticResource MutedText}"
+                               MaxWidth="420"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- App list -->
+            <Border Style="{StaticResource CardBorder}"
+                    Margin="0,18,0,0"
+                    Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="APPLICATION" Style="{StaticResource OverlineText}" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
+                        <TextBlock Text="STATE" Style="{StaticResource OverlineText}" FontSize="9.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" Margin="0,0,86,0" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Apps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0"
+                                                Width="40" Height="40"
+                                                CornerRadius="11"
+                                                Background="{StaticResource InputBackgroundBrush}"
+                                                BorderBrush="{StaticResource BorderBrush}"
+                                                BorderThickness="1"
+                                                Margin="0,0,12,0">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Initial}"
+                                                           FontSize="16"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource GoldSoftBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                                <Image Source="{Binding Icon}" Width="24" Height="24" Stretch="Uniform" />
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="13.5" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding ExecutablePath}" Style="{StaticResource MutedText}" FontSize="10.5" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding LastLockedText}" Style="{StaticResource MutedText}" FontSize="10" Foreground="{StaticResource GoldSoftBrush}" />
+                                        </StackPanel>
+
+                                        <CheckBox Grid.Column="2"
+                                                  Style="{StaticResource AppCheckBox}"
+                                                  Content="Enabled"
+                                                  IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                                                  VerticalAlignment="Center"
+                                                  Margin="12,0,12,0"
+                                                  Click="OnToggleClick" />
+
+                                        <Button Grid.Column="3"
+                                                Content="Remove"
+                                                Style="{StaticResource LinkButton}"
+                                                Foreground="{StaticResource MutedBrush}"
+                                                VerticalAlignment="Center"
+                                                Click="OnRemoveClick" />
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="{StaticResource HairlineBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="App already chalu thakle list e add korlei sathe sathe lock hobe. Rename/copy kore bypass korleo same process name dhora pore."
+                       Style="{StaticResource MutedText}"
+                       FontSize="11"
+                       Margin="0,14,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

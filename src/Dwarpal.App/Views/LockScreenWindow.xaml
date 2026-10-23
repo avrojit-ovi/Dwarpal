@@ -1,0 +1,159 @@
+<Window x:Class="Dwarpal.App.Views.LockScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Dwarpal.App.Controls"
+        mc:Ignorable="d"
+        Title="Dwarpal — App Locked"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="#FF050A13"
+        Foreground="{StaticResource InkBrush}"
+        FontFamily="{StaticResource AppFont}"
+        Opacity="0">
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF0A1424" Offset="0" />
+                <GradientStop Color="#FF060C17" Offset="0.6" />
+                <GradientStop Color="#FF04070E" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Image x:Name="BackgroundImage"
+               Stretch="UniformToFill"
+               Opacity="0.34"
+               RenderOptions.BitmapScalingMode="HighQuality">
+            <Image.Effect>
+                <BlurEffect Radius="24" KernelType="Gaussian" />
+            </Image.Effect>
+        </Image>
+
+        <Rectangle Fill="#B3060C18" />
+
+        <TextBlock Text="DWARPAL · APP LOCK"
+                   Style="{StaticResource OverlineText}"
+                   FontSize="10"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top"
+                   Margin="32,26,0,0" />
+
+        <Border Width="404"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="#F20B1524"
+                BorderBrush="#33D4AF37"
+                BorderThickness="1"
+                CornerRadius="20"
+                Padding="30,28">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="46" ShadowDepth="0" Opacity="0.55" Color="#FF000000" />
+            </Border.Effect>
+
+            <StackPanel>
+                <Border Width="84" Height="84"
+                        CornerRadius="22"
+                        Background="{StaticResource InputBackgroundBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        HorizontalAlignment="Center">
+                    <Grid>
+                        <TextBlock Text="{Binding Initial}"
+                                   FontFamily="{StaticResource DisplayFont}"
+                                   FontSize="34"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource GoldSoftBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+
+                        <Image Source="{Binding AppIcon}"
+                               Width="48"
+                               Height="48"
+                               Stretch="Uniform"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="{Binding AppName}"
+                           Style="{StaticResource HeroText}"
+                           FontSize="22"
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="0,16,0,0" />
+
+                <TextBlock Text="is locked by Dwarpal"
+                           Style="{StaticResource MutedText}"
+                           TextAlignment="Center"
+                           Margin="0,5,0,0" />
+
+                <TextBlock Text="Ei app ta ekhon suspend kora ache. Unlock na korle cholbe na."
+                           Style="{StaticResource MutedText}"
+                           TextAlignment="Center"
+                           FontSize="11.5"
+                           Margin="0,12,0,0" />
+
+                <controls:PinPad x:Name="PinPadControl"
+                                 Margin="0,18,0,0"
+                                 Visibility="{Binding IsPin, Converter={StaticResource BoolToVisibility}}"
+                                 IsEnabled="{Binding CanAttempt}"
+                                 Submitted="OnPinPadSubmitted"
+                                 SecretChanged="OnSecretChanged" />
+
+                <StackPanel Visibility="{Binding IsPassword, Converter={StaticResource BoolToVisibility}}">
+                    <PasswordBox x:Name="PasswordBoxInput"
+                                 Style="{StaticResource AppPasswordBox}"
+                                 Margin="0,20,0,0"
+                                 IsEnabled="{Binding CanAttempt}"
+                                 KeyDown="OnPasswordKeyDown"
+                                 ToolTip="Password" />
+                    <Button Content="Unlock"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,10,0,0"
+                            IsEnabled="{Binding CanAttempt}"
+                            Click="OnUnlockPasswordClick" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Style="{StaticResource DangerText}"
+                           TextAlignment="Center"
+                           HorizontalAlignment="Center"
+                           Margin="0,12,0,0" />
+
+                <TextBlock Text="{Binding Lockout.Text}"
+                           Style="{StaticResource MutedText}"
+                           Foreground="{StaticResource GoldSoftBrush}"
+                           TextAlignment="Center"
+                           HorizontalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Margin="0,6,0,0" />
+
+                <Button Content="Forgot PIN or password?"
+                        Style="{StaticResource LinkButton}"
+                        HorizontalAlignment="Center"
+                        Margin="0,8,0,0"
+                        Click="OnForgotClick" />
+
+                <Rectangle Height="1" Fill="{StaticResource HairlineBrush}" Margin="0,18,0,12" />
+
+                <TextBlock Text="Process suspended · NtSuspendProcess"
+                           Style="{StaticResource MutedText}"
+                           FontSize="10"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock Text="{Binding AppPath}"
+                   Style="{StaticResource MutedText}"
+                   FontSize="10.5"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"
+                   Margin="24,0,24,20"
+                   TextTrimming="CharacterEllipsis"
+                   MaxWidth="760" />
+    </Grid>
+</Window>

@@ -1,0 +1,81 @@
+name: Test and package
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (without the leading v)"
+        required: true
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $raw = "${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}"
+          $version = $raw.Trim().TrimStart('v')
+
+          if ($version -notmatch '^\d+\.\d+\.\d+') {
+            throw "Unsupported version '$raw'. Use a semantic version such as 1.0.0 or tag v1.0.0."
+          }
+
+          "value=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Building Dwarpal $version"
+
+      - name: Restore
+        run: dotnet restore Dwarpal.sln
+
+      - name: Build
+        run: dotnet build Dwarpal.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/Dwarpal.Core.Tests/Dwarpal.Core.Tests.csproj --configuration Release
+
+      - name: Install Inno Setup 6
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: ./scripts/build-installer.ps1 -Version "${{ steps.version.outputs.value }}" -DotnetPath "dotnet"
+
+      - name: Build portable ZIP
+        shell: pwsh
+        run: ./scripts/build-portable.ps1 -Version "${{ steps.version.outputs.value }}" -DotnetPath "dotnet"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dwarpal-${{ steps.version.outputs.value }}
+          if-no-files-found: error
+          path: |
+            installer/Output/Dwarpal-Setup-*.exe
+            artifacts/Dwarpal-*-portable.zip
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Dwarpal ${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          files: |
+            installer/Output/Dwarpal-Setup-*.exe
+            artifacts/Dwarpal-*-portable.zip

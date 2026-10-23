@@ -1,0 +1,81 @@
+<Window x:Class="Dwarpal.App.Views.SelfieWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Intruder selfie"
+        Width="640" Height="680"
+        MinWidth="420" MinHeight="440"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Opacity="0"
+        Style="{StaticResource AppWindow}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      ResizeBorderThickness="4"
+                      CornerRadius="14"
+                      GlassFrameThickness="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Border CornerRadius="14"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="OnDragAreaMouseDown">
+                <TextBlock Text="INTRUDER SELFIE"
+                           Style="{StaticResource OverlineText}"
+                           FontSize="10"
+                           VerticalAlignment="Center"
+                           Margin="24,0,0,0" />
+                <Button Style="{StaticResource TitleBarCloseButton}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,10,0"
+                        Content="&#xE8BB;"
+                        ToolTip="Close"
+                        Click="OnCloseClick" />
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Margin="24,4,24,0"
+                    CornerRadius="12"
+                    Background="{StaticResource Navy950Brush}"
+                    BorderBrush="{StaticResource BorderSoftBrush}"
+                    BorderThickness="1"
+                    ClipToBounds="True">
+                <Grid>
+                    <Image x:Name="SelfieImage"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock x:Name="ErrorText"
+                               Style="{StaticResource MutedText}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="24"
+                               Visibility="Collapsed" />
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="2" Margin="26,14,26,22">
+                <TextBlock x:Name="EventText" Style="{StaticResource TitleText}" FontSize="14" />
+                <TextBlock x:Name="TimestampText" Style="{StaticResource MutedText}" FontSize="11" Margin="0,4,0,0" />
+                <TextBlock Text="Ei chhobi encrypted vabe local e rakha hoyeche — shudhu ei machine ei account e khola jay."
+                           Style="{StaticResource MutedText}"
+                           FontSize="10.5"
+                           TextWrapping="Wrap"
+                           Margin="0,10,0,0" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

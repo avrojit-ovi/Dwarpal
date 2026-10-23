@@ -29,6 +29,10 @@ public partial class CredentialPromptWindow : Window
         Loaded += async (_, _) =>
         {
             UiAnimations.FadeIn(this);
+
+            // Prompt ta kono topmost window (lock screen) er pichhe na thakuk.
+            Activate();
+
             await LoadKindAsync();
         };
     }

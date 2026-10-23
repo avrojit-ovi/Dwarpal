@@ -580,17 +580,16 @@ public sealed class ProtectionEngine : IDisposable
     {
         _autoRelockSessions.Remove(app.Id);
 
-        if (_autoRelockSettings.ResolveTimeout(app) is null)
-        {
-            return;
-        }
-
         var running = processIds.Where(ProcessController.IsRunning).ToHashSet();
         if (running.Count == 0)
         {
             return;
         }
 
+        // Session ta "app ekhon unlocked/in use" marker hisebei kaj kore - timeout null
+        // (auto re-lock off) hole o rakha hoy, jate foreground trigger just-unlocked app
+        // ke abar na dore. Tick e timeout null hole re-lock hoy na; process sesh hole
+        // marker ta nijei pore jay.
         // BackgroundedAt null: app foreground e thakle timeout count hobe na.
         _autoRelockSessions[app.Id] = new AutoRelockSession(app, running, DateTimeOffset.UtcNow);
     }
@@ -609,6 +608,63 @@ public sealed class ProtectionEngine : IDisposable
             {
                 session.BackgroundedAt ??= now;
             }
+        }
+
+        TryLockOnForeground(processId);
+    }
+
+    /// <summary>
+    /// File Explorer er moto system app process-start event khola khule khole na - shell
+    /// process already running thake, notun window khulleo WMI event ase na. Tai foreground
+    /// e asha protected app jeta ekhon kono lock ba in-use session e nei take lock koro,
+    /// jate "already running" app o protect hoy.
+    /// </summary>
+    private void TryLockOnForeground(int processId)
+    {
+        if (_disposed
+            || processId == Environment.ProcessId
+            || _apps.Count == 0
+            || !IsProtectionWindowOpen())
+        {
+            return;
+        }
+
+        var processName = ProcessController.TryGetProcessName(processId);
+        if (processName is null)
+        {
+            return;
+        }
+
+        foreach (var app in _apps)
+        {
+            if (!IsAppActive(app)
+                || _lockedSessions.ContainsKey(app.Id)
+                || _autoRelockSessions.ContainsKey(app.Id))
+            {
+                continue;
+            }
+
+            var executablePath = ProcessController.TryGetExecutablePath(processId);
+            if (!ProtectedAppMatcher.Matches(app, processName, executablePath))
+            {
+                continue;
+            }
+
+            _ = LockOnForegroundAsync(app, processId);
+            return;
+        }
+    }
+
+    private async Task LockOnForegroundAsync(ProtectedApp app, int processId)
+    {
+        try
+        {
+            // LockProcessAsync nijei session, schedule window ar process-running guard check kore.
+            await LockProcessAsync(app, processId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Foreground lock failed for {App}", app.DisplayName);
         }
     }
 
@@ -653,7 +709,7 @@ public sealed class ProtectionEngine : IDisposable
 
                 if (timeout is null)
                 {
-                    _autoRelockSessions.Remove(session.App.Id);
+                    // Auto re-lock off: session ta shudhu in-use marker - re-lock hobe na.
                     continue;
                 }
 
@@ -782,7 +838,12 @@ public sealed class ProtectionEngine : IDisposable
         }
 
         // App exit er somoy suspend kora process gulo stuck rakha jabe na - resume kore dey.
-        foreach (var session in _lockedSessions.Values.ToArray())
+        // Age session gulo clear koro: CloseForUnlock -> Unlocked handler abar resume/log
+        // korle double-resume ar bogus activity entry hoy.
+        var sessions = _lockedSessions.Values.ToArray();
+        _lockedSessions.Clear();
+
+        foreach (var session in sessions)
         {
             foreach (var processId in session.SuspendedProcessIds)
             {
@@ -798,8 +859,6 @@ public sealed class ProtectionEngine : IDisposable
                 Log.Debug(ex, "Lock window close during dispose failed");
             }
         }
-
-        _lockedSessions.Clear();
         IsRunning = false;
         RaiseStateChanged();
     }

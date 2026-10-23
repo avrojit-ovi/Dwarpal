@@ -12,7 +12,7 @@
         Height="720"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="True"
-        Topmost="False"
+        Topmost="True"
         Background="#FF050A13"
         Foreground="{StaticResource InkBrush}"
         FontFamily="{StaticResource AppFont}"

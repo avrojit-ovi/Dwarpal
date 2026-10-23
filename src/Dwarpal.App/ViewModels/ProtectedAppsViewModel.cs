@@ -101,7 +101,15 @@ public partial class ProtectedAppsViewModel : ObservableObject
             // Already chalu thakle sathe sathe lock hobe (spec requirement).
             if (AppServices.Protection is not null)
             {
-                await AppServices.Protection.RefreshAsync(lockRunningInstances: true);
+                try
+                {
+                    await AppServices.Protection.RefreshAsync(lockRunningInstances: true);
+                }
+                catch (Exception ex)
+                {
+                    // App add hoye geche - lock refresh er error ke "add fail" dekhabe na.
+                    Log.Warning(ex, "Post-add lock refresh failed");
+                }
             }
 
             await LoadAsync();

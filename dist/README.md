@@ -1,13 +1,13 @@
 # Release artifacts
 
-Prebuilt binaries for **Dwarpal 1.0.2**, byte-for-byte identical to the assets on the matching
-[GitHub release](https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.2). They are committed so
+Prebuilt binaries for **Dwarpal 1.0.3**, byte-for-byte identical to the assets on the matching
+[GitHub release](https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.3). They are committed so
 the repository is usable without a release download; the release remains the source of truth.
 
 | File | What it is |
 | --- | --- |
-| `Dwarpal-Setup-1.0.2.exe` | Inno Setup installer (per-machine, elevated). Bundles the .NET 8 Desktop Runtime (x64) and installs it silently when missing. |
-| `Dwarpal-1.0.2-portable.zip` | Portable build: extract anywhere and run `Dwarpal.exe`. Requires the .NET 8 Desktop Runtime; data still lives in `%ProgramData%\Dwarpal`. |
+| `Dwarpal-Setup-1.0.3.exe` | Inno Setup installer (per-machine, elevated). Bundles the .NET 8 Desktop Runtime (x64) and installs it silently when missing. |
+| `Dwarpal-1.0.3-portable.zip` | Portable build: extract anywhere and run `Dwarpal.exe`. Requires the .NET 8 Desktop Runtime; data still lives in `%ProgramData%\Dwarpal`. |
 | `SHA256SUMS.txt` | SHA-256 checksums for both artifacts. |
 
 ## Requirements
@@ -20,7 +20,7 @@ the repository is usable without a release download; the release remains the sou
 ## Verify a download
 
 ```powershell
-Get-FileHash .\Dwarpal-Setup-1.0.2.exe -Algorithm SHA256
+Get-FileHash .\Dwarpal-Setup-1.0.3.exe -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ```
 

@@ -15,7 +15,7 @@ public partial class DashboardViewModel : ObservableObject
     private string _greeting = "Hello";
 
     [ObservableProperty]
-    private string _activeProfile = "Default";
+    private string _activeProfile = "All apps";
 
     [ObservableProperty]
     private int _protectedAppCount;
@@ -67,7 +67,14 @@ public partial class DashboardViewModel : ObservableObject
             RecoveryKeyStatus = string.IsNullOrEmpty(acknowledged) ? "Not confirmed" : "Saved";
 
             var apps = await AppServices.ProtectedApps.GetAllAsync();
-            ProtectedAppCount = apps.Count;
+            var profiles = await AppServices.Profiles.GetAllAsync();
+            var activeProfileId = await AppServices.Profiles.GetActiveProfileIdAsync();
+
+            ActiveProfile = activeProfileId == Profile.AllAppsProfileId
+                ? "All apps"
+                : profiles.FirstOrDefault(profile => profile.Id == activeProfileId)?.Name ?? "All apps";
+
+            ProtectedAppCount = apps.Count(app => app.IsEnabled);
 
             var engine = AppServices.Protection;
             IsProtectionActive = engine?.IsRunning == true;

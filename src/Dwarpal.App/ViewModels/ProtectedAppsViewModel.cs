@@ -136,6 +136,7 @@ public partial class ProtectedAppsViewModel : ObservableObject
         {
             Log.Error(ex, "Toggling protected app failed");
             SetStatus("Update korte parlam na: " + ex.Message, isError: true);
+            await LoadAsync();
         }
     }
 

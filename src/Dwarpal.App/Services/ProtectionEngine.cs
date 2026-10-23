@@ -15,7 +15,8 @@ namespace Dwarpal.App.Services;
 /// <summary>
 /// App locker er engine:
 /// WMI process-start event -> protected match -> suspend -> lock screen -> credential -> resume.
-/// Unlock er por auto re-lock session chalu hoy: app background/minimize hole timeout por abar lock.
+/// Ek protected app er sob process ek lock session e thake, tai Chrome/Discord er moto
+/// multi-process app e ekta e lock screen ashe ar unlock e sob process resume hoy.
 /// Sob UI operation engine er dispatcher e chole; WMI/WinEvent callback background theke ashe.
 /// </summary>
 public sealed class ProtectionEngine : IDisposable
@@ -29,8 +30,8 @@ public sealed class ProtectionEngine : IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly ProcessStartWatcher _watcher = new();
     private readonly ForegroundMonitor _foregroundMonitor = new();
-    private readonly Dictionary<int, LockScreenWindow> _lockedWindows = new();
-    private readonly Dictionary<int, ActiveSession> _activeSessions = new();
+    private readonly Dictionary<int, LockedSession> _lockedSessions = new();
+    private readonly Dictionary<int, AutoRelockSession> _autoRelockSessions = new();
     private readonly DispatcherTimer _autoRelockTimer;
     private readonly DispatcherTimer _scheduleTimer;
 
@@ -74,7 +75,7 @@ public sealed class ProtectionEngine : IDisposable
     public bool IsRunning { get; private set; }
     public string? LastError { get; private set; }
     public int EnabledAppCount => _apps.Count(IsAppActive);
-    public int LockedProcessCount => _lockedWindows.Count;
+    public int LockedProcessCount => _lockedSessions.Values.Sum(session => session.ProcessIds.Count);
 
     public event EventHandler? StateChanged;
 
@@ -129,7 +130,7 @@ public sealed class ProtectionEngine : IDisposable
 
     /// <summary>
     /// Panic hotkey: schedule window ignore kore ekhoni sob running protected app lock kore.
-    /// Return kore koto gulo notun process lock holo.
+    /// Return kore koto gulo notun app lock holo.
     /// </summary>
     public async Task<int> LockAllRunningAsync()
     {
@@ -137,9 +138,9 @@ public sealed class ProtectionEngine : IDisposable
 
         foreach (var app in _apps.Where(IsAppActive))
         {
-            var before = _lockedWindows.Count;
+            var before = _lockedSessions.Count;
             await LockRunningInstancesAsync(app, force: true);
-            locked += Math.Max(0, _lockedWindows.Count - before);
+            locked += Math.Max(0, _lockedSessions.Count - before);
         }
 
         return locked;
@@ -154,15 +155,26 @@ public sealed class ProtectionEngine : IDisposable
         _wasWindowOpen = IsProtectionWindowOpen();
 
         // Removed/disabled app er active auto-relock session ar dorkar nei.
-        foreach (var session in _activeSessions.Values.ToArray())
+        foreach (var session in _autoRelockSessions.Values.ToArray())
         {
             var fresh = _apps.FirstOrDefault(candidate => candidate.Id == session.App.Id);
 
             if (fresh is null || !IsAppActive(fresh))
             {
-                _activeSessions.Remove(session.ProcessId);
+                _autoRelockSessions.Remove(session.App.Id);
             }
             else
+            {
+                session.App = fresh;
+            }
+        }
+
+        // Locked session er app metadata refresh koro; lock screen ta user credential
+        // chara bondho kora jabe na, tai removed app er session o unlock porjonto thake.
+        foreach (var session in _lockedSessions.Values)
+        {
+            var fresh = _apps.FirstOrDefault(candidate => candidate.Id == session.App.Id);
+            if (fresh is not null)
             {
                 session.App = fresh;
             }
@@ -175,7 +187,7 @@ public sealed class ProtectionEngine : IDisposable
 
         foreach (var app in _apps)
         {
-            await LockRunningInstancesAsync(app);
+            await LockRunningInstancesAsync(app, force: true);
         }
     }
 
@@ -201,7 +213,6 @@ public sealed class ProtectionEngine : IDisposable
         {
             return;
         }
-
 
         Process[] processes;
 
@@ -287,9 +298,33 @@ public sealed class ProtectionEngine : IDisposable
 
     private async Task LockProcessAsync(ProtectedApp app, int processId, bool force = false)
     {
-        if (_disposed || _lockedWindows.ContainsKey(processId) || processId == Environment.ProcessId)
+        if (_disposed || processId == Environment.ProcessId)
         {
             return;
+        }
+
+        // Same app er already ekta lock screen ache - notun child process ke oi
+        // session e add koro, notun lock screen banio na.
+        if (_lockedSessions.TryGetValue(app.Id, out var existing))
+        {
+            await AddProcessToSessionAsync(existing, app, processId);
+            return;
+        }
+
+        // App unlocked obosthay cholche (auto re-lock session active). Chrome/Discord
+        // er child process start hole take abar lock koro na; session e add koro.
+        if (!force && _autoRelockSessions.TryGetValue(app.Id, out var autoSession))
+        {
+            autoSession.ProcessIds.RemoveWhere(candidate => !ProcessController.IsRunning(candidate));
+
+            if (autoSession.ProcessIds.Count > 0)
+            {
+                autoSession.ProcessIds.Add(processId);
+                return;
+            }
+
+            // Purano process gulo sob exit koreche - eta notun launch, lock hobe.
+            _autoRelockSessions.Remove(app.Id);
         }
 
         if (!force && !IsProtectionWindowOpen())
@@ -313,20 +348,83 @@ public sealed class ProtectionEngine : IDisposable
         var executablePath = ProcessController.TryGetExecutablePath(processId) ?? app.ExecutablePath;
         var icon = IconLoader.Load(executablePath, 96);
 
-        var window = new LockScreenWindow(new LockScreenContext(
-            app,
-            processId,
-            icon,
-            secret => VerifySecretAsync(app, secret)));
+        LockScreenWindow window;
 
-        window.Unlocked += async (_, _) => await CompleteSessionAsync(processId, resumeProcess: true);
-        window.ProcessExited += async (_, _) => await CompleteSessionAsync(processId, resumeProcess: false);
+        try
+        {
+            window = new LockScreenWindow(new LockScreenContext(
+                app,
+                icon,
+                secret => VerifySecretAsync(app, secret),
+                () => IsAnyProcessRunning(app.Id)));
+        }
+        catch (Exception ex)
+        {
+            // Window construction fail korle process ke suspended chere dewa jabe na.
+            Log.Error(ex, "Could not create lock screen for {App}", app.DisplayName);
+            if (suspended)
+            {
+                ProcessController.TryResumeSilently(processId);
+            }
 
-        _lockedWindows[processId] = window;
-        _activeSessions.Remove(processId);
+            return;
+        }
 
-        window.Show();
-        window.Activate();
+        var session = new LockedSession(app, processId);
+        if (suspended)
+        {
+            session.SuspendedProcessIds.Add(processId);
+        }
+
+        session.Window = window;
+        _lockedSessions[app.Id] = session;
+        _autoRelockSessions.Remove(app.Id);
+
+        window.Unlocked += async (_, _) =>
+        {
+            try
+            {
+                await CompleteSessionAsync(app.Id, resumeProcess: true);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Completing unlock for {App} failed", app.DisplayName);
+            }
+        };
+
+        window.ProcessExited += async (_, _) =>
+        {
+            try
+            {
+                await CompleteSessionAsync(app.Id, resumeProcess: false);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Completing exited lock session for {App} failed", app.DisplayName);
+            }
+        };
+
+        try
+        {
+            window.Show();
+            window.Activate();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not show lock screen for {App}", app.DisplayName);
+            _lockedSessions.Remove(app.Id);
+            ProcessController.TryResumeSilently(processId);
+            try
+            {
+                window.CloseForUnlock();
+            }
+            catch
+            {
+                // Best effort only - the session is already being abandoned.
+            }
+
+            return;
+        }
 
         if (!suspended)
         {
@@ -347,44 +445,125 @@ public sealed class ProtectionEngine : IDisposable
         RaiseStateChanged();
     }
 
+    private async Task AddProcessToSessionAsync(LockedSession session, ProtectedApp app, int processId)
+    {
+        if (!ProcessController.IsRunning(processId) || !session.ProcessIds.Add(processId))
+        {
+            return;
+        }
+
+        var suspended = ProcessController.TrySuspend(processId, out var suspendError);
+        if (suspended)
+        {
+            session.SuspendedProcessIds.Add(processId);
+        }
+
+        Log.Information(
+            "Added process {ProcessId} to the existing {App} lock session (suspended={Suspended})",
+            processId, app.DisplayName, suspended);
+
+        await _activity.LogAsync(
+            ActivityEventType.Lock,
+            suspended ? ActivityOutcome.Success : ActivityOutcome.Failure,
+            suspended
+                ? $"Suspended another {app.DisplayName} process ({processId}) into the existing lock session."
+                : $"Could not suspend another {app.DisplayName} process ({processId}): {suspendError}",
+            app.DisplayName,
+            app.ExecutablePath);
+
+        RaiseStateChanged();
+    }
+
+    private bool IsAnyProcessRunning(int appId)
+        => _lockedSessions.TryGetValue(appId, out var session)
+           && session.ProcessIds.Any(ProcessController.IsRunning);
+
     private async Task<LockAttemptResult> VerifySecretAsync(ProtectedApp app, string secret)
     {
         var result = await _credentials.VerifyAsync(secret, $"Unlock {app.DisplayName}");
         return new LockAttemptResult(result.Success, result.Error, result.LockoutSeconds);
     }
 
-    private async Task CompleteSessionAsync(int processId, bool resumeProcess)
+    private async Task CompleteSessionAsync(int appId, bool resumeProcess)
     {
-        if (!_lockedWindows.Remove(processId, out var window))
+        if (!_lockedSessions.Remove(appId, out var session))
         {
             return;
         }
 
-        var app = window.App;
-        var appName = window.AppName;
-        var appPath = window.AppPath;
+        var app = session.App;
+        var appName = app.DisplayName;
+        var appPath = app.ExecutablePath;
+        var window = session.Window;
+
+        // Lock screen ta sathe sathe bondho koro - activity log/resume e deri hole o
+        // user er kache window atke thakbe na.
+        try
+        {
+            window?.CloseForUnlock();
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Lock window close after session completion failed");
+        }
 
         if (resumeProcess)
         {
-            var resumed = ProcessController.TryResume(processId, out var resumeError);
+            var resumed = new List<int>();
+            var failed = new List<string>();
 
-            await _activity.LogAsync(
-                ActivityEventType.Lock,
-                resumed ? ActivityOutcome.Success : ActivityOutcome.Failure,
-                resumed
-                    ? $"Resumed {appName} after unlock."
-                    : $"Unlock succeeded but resume failed: {resumeError}",
-                appName,
-                appPath);
-
-            if (resumed)
+            foreach (var processId in session.SuspendedProcessIds)
             {
-                BeginAutoRelockSession(app, processId);
+                if (!ProcessController.IsRunning(processId))
+                {
+                    continue;
+                }
+
+                if (ProcessController.TryResume(processId, out var resumeError))
+                {
+                    resumed.Add(processId);
+                }
+                else
+                {
+                    failed.Add($"{processId}: {resumeError}");
+                }
+            }
+
+            if (resumed.Count > 0)
+            {
+                await _activity.LogAsync(
+                    ActivityEventType.Lock,
+                    failed.Count == 0 ? ActivityOutcome.Success : ActivityOutcome.Failure,
+                    failed.Count == 0
+                        ? $"Resumed {appName} ({resumed.Count} process(es)) after unlock."
+                        : $"Unlocked {appName}; resumed {resumed.Count} process(es), failed: {string.Join("; ", failed)}",
+                    appName,
+                    appPath);
+
+                BeginAutoRelockSession(app, resumed);
+            }
+            else if (failed.Count > 0)
+            {
+                await _activity.LogAsync(
+                    ActivityEventType.Lock,
+                    ActivityOutcome.Failure,
+                    $"Unlock succeeded but no {appName} process could be resumed: {string.Join("; ", failed)}",
+                    appName,
+                    appPath);
+            }
+            else
+            {
+                await _activity.LogAsync(
+                    ActivityEventType.Lock,
+                    ActivityOutcome.Info,
+                    $"{appName} had no running suspended process to resume.",
+                    appName,
+                    appPath);
             }
         }
         else
         {
-            _activeSessions.Remove(processId);
+            _autoRelockSessions.Remove(appId);
 
             await _activity.LogAsync(
                 ActivityEventType.Lock,
@@ -394,30 +573,35 @@ public sealed class ProtectionEngine : IDisposable
                 appPath);
         }
 
-        window.CloseForUnlock();
         RaiseStateChanged();
     }
 
-    private void BeginAutoRelockSession(ProtectedApp app, int processId)
+    private void BeginAutoRelockSession(ProtectedApp app, IEnumerable<int> processIds)
     {
-        _activeSessions.Remove(processId);
+        _autoRelockSessions.Remove(app.Id);
 
         if (_autoRelockSettings.ResolveTimeout(app) is null)
         {
             return;
         }
 
-        var now = DateTimeOffset.UtcNow;
-        _activeSessions[processId] = new ActiveSession(app, processId, now, now);
+        var running = processIds.Where(ProcessController.IsRunning).ToHashSet();
+        if (running.Count == 0)
+        {
+            return;
+        }
+
+        // BackgroundedAt null: app foreground e thakle timeout count hobe na.
+        _autoRelockSessions[app.Id] = new AutoRelockSession(app, running, DateTimeOffset.UtcNow);
     }
 
     private void OnForegroundProcessChanged(object? sender, int processId)
     {
         var now = DateTimeOffset.UtcNow;
 
-        foreach (var session in _activeSessions.Values)
+        foreach (var session in _autoRelockSessions.Values)
         {
-            if (session.ProcessId == processId)
+            if (session.ProcessIds.Contains(processId))
             {
                 session.BackgroundedAt = null;
             }
@@ -430,7 +614,7 @@ public sealed class ProtectionEngine : IDisposable
 
     private void OnMinimizeStarted(object? sender, int processId)
     {
-        if (_activeSessions.TryGetValue(processId, out var session))
+        if (_autoRelockSessions.Values.FirstOrDefault(session => session.ProcessIds.Contains(processId)) is { } session)
         {
             session.BackgroundedAt ??= DateTimeOffset.UtcNow;
         }
@@ -438,7 +622,7 @@ public sealed class ProtectionEngine : IDisposable
 
     private async void OnAutoRelockTick(object? sender, EventArgs e)
     {
-        if (_disposed || _activeSessions.Count == 0)
+        if (_disposed || _autoRelockSessions.Count == 0)
         {
             return;
         }
@@ -455,11 +639,13 @@ public sealed class ProtectionEngine : IDisposable
             var idle = IdleDetector.GetIdleTime();
             var idleStartedAt = idle > TimeSpan.Zero ? now - idle : (DateTimeOffset?)null;
 
-            foreach (var session in _activeSessions.Values.ToArray())
+            foreach (var session in _autoRelockSessions.Values.ToArray())
             {
-                if (!ProcessController.IsRunning(session.ProcessId))
+                session.ProcessIds.RemoveWhere(processId => !ProcessController.IsRunning(processId));
+
+                if (session.ProcessIds.Count == 0)
                 {
-                    _activeSessions.Remove(session.ProcessId);
+                    _autoRelockSessions.Remove(session.App.Id);
                     continue;
                 }
 
@@ -467,7 +653,7 @@ public sealed class ProtectionEngine : IDisposable
 
                 if (timeout is null)
                 {
-                    _activeSessions.Remove(session.ProcessId);
+                    _autoRelockSessions.Remove(session.App.Id);
                     continue;
                 }
 
@@ -484,7 +670,7 @@ public sealed class ProtectionEngine : IDisposable
                     continue;
                 }
 
-                _activeSessions.Remove(session.ProcessId);
+                _autoRelockSessions.Remove(session.App.Id);
 
                 await _activity.LogAsync(
                     ActivityEventType.Lock,
@@ -493,7 +679,13 @@ public sealed class ProtectionEngine : IDisposable
                     session.App.DisplayName,
                     session.App.ExecutablePath);
 
-                await LockProcessAsync(session.App, session.ProcessId);
+                foreach (var processId in session.ProcessIds.ToArray())
+                {
+                    if (ProcessController.IsRunning(processId))
+                    {
+                        await LockProcessAsync(session.App, processId);
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -533,7 +725,7 @@ public sealed class ProtectionEngine : IDisposable
 
                 foreach (var app in _apps.Where(IsAppActive))
                 {
-                    await LockRunningInstancesAsync(app);
+                    await LockRunningInstancesAsync(app, force: true);
                 }
             }
             else
@@ -569,7 +761,7 @@ public sealed class ProtectionEngine : IDisposable
         _watcher.ProcessStarted -= OnProcessStarted;
         _foregroundMonitor.ForegroundProcessChanged -= OnForegroundProcessChanged;
         _foregroundMonitor.MinimizeStarted -= OnMinimizeStarted;
-        _activeSessions.Clear();
+        _autoRelockSessions.Clear();
 
         try
         {
@@ -590,13 +782,16 @@ public sealed class ProtectionEngine : IDisposable
         }
 
         // App exit er somoy suspend kora process gulo stuck rakha jabe na - resume kore dey.
-        foreach (var (processId, window) in _lockedWindows.ToArray())
+        foreach (var session in _lockedSessions.Values.ToArray())
         {
-            ProcessController.TryResumeSilently(processId);
+            foreach (var processId in session.SuspendedProcessIds)
+            {
+                ProcessController.TryResumeSilently(processId);
+            }
 
             try
             {
-                window.CloseForUnlock();
+                session.Window?.CloseForUnlock();
             }
             catch (Exception ex)
             {
@@ -604,23 +799,36 @@ public sealed class ProtectionEngine : IDisposable
             }
         }
 
-        _lockedWindows.Clear();
+        _lockedSessions.Clear();
         IsRunning = false;
         RaiseStateChanged();
     }
 
-    private sealed class ActiveSession
+    private sealed class LockedSession
     {
-        public ActiveSession(ProtectedApp app, int processId, DateTimeOffset unlockedAt, DateTimeOffset? backgroundedAt)
+        public LockedSession(ProtectedApp app, int processId)
         {
             App = app;
-            ProcessId = processId;
-            UnlockedAt = unlockedAt;
-            BackgroundedAt = backgroundedAt;
+            ProcessIds = new HashSet<int> { processId };
         }
 
         public ProtectedApp App { get; set; }
-        public int ProcessId { get; }
+        public HashSet<int> ProcessIds { get; }
+        public HashSet<int> SuspendedProcessIds { get; } = new();
+        public LockScreenWindow? Window { get; set; }
+    }
+
+    private sealed class AutoRelockSession
+    {
+        public AutoRelockSession(ProtectedApp app, HashSet<int> processIds, DateTimeOffset unlockedAt)
+        {
+            App = app;
+            ProcessIds = processIds;
+            UnlockedAt = unlockedAt;
+        }
+
+        public ProtectedApp App { get; set; }
+        public HashSet<int> ProcessIds { get; }
         public DateTimeOffset UnlockedAt { get; }
         public DateTimeOffset? BackgroundedAt { get; set; }
     }

@@ -30,7 +30,9 @@ public static class AutoStartService
         var result = Run(
             "/Create",
             "/TN", TaskName,
-            "/TR", executablePath,
+            // schtasks parses /TR itself, so the executable path must be quoted
+            // when it contains spaces (for example Program Files).
+            "/TR", $"\"{executablePath}\"",
             "/SC", "ONLOGON",
             "/RL", "HIGHEST",
             "/F");

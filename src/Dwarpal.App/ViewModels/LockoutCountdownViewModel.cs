@@ -30,9 +30,17 @@ public partial class LockoutCountdownViewModel : ObservableObject
         try
         {
             var status = await AppServices.Lockout.GetStatusAsync();
+
             if (status.IsLockedOut)
             {
                 Start(status.RemainingSeconds);
+            }
+            else
+            {
+                // Recovery reset / cooldown expiry DB state clear kore, but ei UI timer
+                // purano countdown chalu rekhe dite pare. Eta na clear korle notun PIN
+                // diyeo input disabled thake.
+                Clear();
             }
         }
         catch (Exception ex)
@@ -54,6 +62,9 @@ public partial class LockoutCountdownViewModel : ObservableObject
 
         if (!_timer.IsEnabled)
         {
+            // Tick ekbar e subscribe koro; Clear/Start repeatedly korle duplicate
+            // subscriptions ek second e multiple decrement korte pare.
+            _timer.Tick -= OnTick;
             _timer.Tick += OnTick;
             _timer.Start();
         }

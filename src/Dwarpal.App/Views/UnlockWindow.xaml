@@ -9,6 +9,7 @@
         WindowStartupLocation="CenterScreen"
         Width="480" Height="690"
         Opacity="0"
+        KeyDown="OnWindowKeyDown"
         Style="{StaticResource AppWindow}">
 
     <WindowChrome.WindowChrome>
@@ -41,8 +42,8 @@
                             Click="OnMinimizeClick" />
                     <Button Style="{StaticResource TitleBarCloseButton}"
                             Content="&#xE8BB;"
-                            ToolTip="Close"
-                            Click="OnCloseClick" />
+                            ToolTip="Hide"
+                            Click="OnMinimizeClick" />
                 </StackPanel>
             </Grid>
 

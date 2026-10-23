@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using Dwarpal.App.Services;
@@ -8,6 +9,7 @@ namespace Dwarpal.App.Views;
 public partial class UnlockWindow : Window
 {
     private readonly UnlockViewModel _viewModel;
+    private bool _allowClose;
 
     public UnlockWindow()
     {
@@ -24,6 +26,22 @@ public partial class UnlockWindow : Window
             await _viewModel.LoadAsync();
             FocusActiveInput();
         };
+
+        Closing += OnClosing;
+    }
+
+    /// <summary>App startup / Windows shutdown er somoy gate ta close korte dey.</summary>
+    public void AllowClose() => _allowClose = true;
+
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        var appIsShuttingDown = Application.Current is App app && app.IsShuttingDown;
+
+        // Startup credential gate ta close/minimize kore protection bypass kora jabe na.
+        if (!_allowClose && !appIsShuttingDown)
+        {
+            e.Cancel = true;
+        }
     }
 
     private void FocusActiveInput()
@@ -46,6 +64,16 @@ public partial class UnlockWindow : Window
     private void OnPinPadSubmitted(object? sender, EventArgs e) => _ = TryUnlockAsync(PinPadControl.Secret);
 
     private void OnSecretChanged(object? sender, EventArgs e) => _viewModel.ClearError();
+
+    private async void OnWindowKeyDown(object sender, KeyEventArgs e)
+    {
+        // PIN pad er input e focus na thakleo Enter diye unlock kora jabe.
+        if (e.Key == Key.Enter && _viewModel.IsPin)
+        {
+            e.Handled = true;
+            await TryUnlockAsync(PinPadControl.Secret);
+        }
+    }
 
     private async void OnPasswordKeyDown(object sender, KeyEventArgs e)
     {
@@ -76,10 +104,11 @@ public partial class UnlockWindow : Window
     private async void OnForgotClick(object sender, RoutedEventArgs e)
     {
         var recoveryWindow = new RecoveryWindow { Owner = this };
+        var reset = false;
 
         try
         {
-            recoveryWindow.ShowDialog();
+            reset = recoveryWindow.ShowDialog() == true;
         }
         finally
         {
@@ -87,14 +116,16 @@ public partial class UnlockWindow : Window
             await _viewModel.LoadAsync();
             PinPadControl.Clear();
             PasswordBoxInput.Clear();
-            InfoText.Text = "Credential reset hoye gele notun code diye unlock koro.";
+            InfoText.Text = reset
+                ? "Credential reset hoye gele notun code diye unlock koro."
+                : string.Empty;
             FocusActiveInput();
         }
     }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
+    private void OnCloseClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     private void OnDragAreaMouseDown(object sender, MouseButtonEventArgs e)
     {

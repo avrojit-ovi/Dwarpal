@@ -85,6 +85,11 @@ public partial class AppPickerViewModel : ObservableObject
             }
         }
 
+        if (SelectedApp is not null && !Apps.Contains(SelectedApp))
+        {
+            SelectedApp = null;
+        }
+
         if (!IsLoading)
         {
             StatusText = $"{Apps.Count} app";

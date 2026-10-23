@@ -25,7 +25,7 @@
                     <StackPanel>
                         <TextBlock Text="ACTIVE PROFILE" Style="{StaticResource OverlineText}" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
                         <TextBlock Text="{Binding ActiveProfile}" Style="{StaticResource StatValue}" FontSize="24" />
-                        <TextBlock Text="Profiles Phase 6 e add hobe" Style="{StaticResource MutedText}" FontSize="11" Margin="0,6,0,0" />
+                        <TextBlock Text="Active protection profile" Style="{StaticResource MutedText}" FontSize="11" Margin="0,6,0,0" />
                     </StackPanel>
                 </Border>
 

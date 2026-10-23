@@ -20,6 +20,7 @@ public partial class App : Application
 
     public bool HardeningApplied { get; private set; }
     public string? HardeningError { get; private set; }
+    public bool IsShuttingDown => _exiting || Dispatcher.HasShutdownStarted;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -60,6 +61,10 @@ public partial class App : Application
             {
                 main.AllowClose();
             }
+            else if (MainWindow is Views.UnlockWindow unlock)
+            {
+                unlock.AllowClose();
+            }
         };
 
         try
@@ -78,6 +83,14 @@ public partial class App : Application
             }
 
             var isConfigured = await AppServices.Credentials.IsConfiguredAsync();
+
+            // Protection engine startup gate er agei chalu hobe. Nahole unlock window
+            // minimize kore rakhe protected app khulle segulo lock na hoye jete pare.
+            if (isConfigured && AppServices.Protection is { IsRunning: false } protection)
+            {
+                await protection.StartAsync();
+            }
+
             Window startupWindow = isConfigured ? new UnlockWindow() : new SetupWindow();
 
             MainWindow = startupWindow;
@@ -98,6 +111,7 @@ public partial class App : Application
                 "Dwarpal start korte parlam na.\n\n" + ex.Message,
                 "Dwarpal", MessageBoxButton.OK, MessageBoxImage.Error);
 
+            _exiting = true;
             Shutdown(1);
         }
     }
@@ -184,6 +198,7 @@ public partial class App : Application
     public void OpenMainWindow()
     {
         var main = new Views.MainWindow();
+        var previous = MainWindow;
 
         MainWindow = main;
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -191,9 +206,15 @@ public partial class App : Application
         EnsureTray();
         main.Show();
 
-        foreach (var window in Windows.OfType<Window>().Where(w => !ReferenceEquals(w, main)).ToArray())
+        // Shudhu startup gate ta bondho koro - kono active app lock screen close koro na.
+        if (previous is not null && !ReferenceEquals(previous, main))
         {
-            window.Close();
+            if (previous is Views.UnlockWindow unlock)
+            {
+                unlock.AllowClose();
+            }
+
+            previous.Close();
         }
     }
 
@@ -328,6 +349,11 @@ public partial class App : Application
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unhandled UI exception");
+
+        if (Current is App app)
+        {
+            app._exiting = true;
+        }
 
         MessageBox.Show(
             "Ekta unexpected error hoyeche. Details log file e ache.\n\n" + e.Exception.Message,

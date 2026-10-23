@@ -20,6 +20,10 @@ public partial class SettingsView : UserControl
         }
 
         await viewModel.SetAutoStartAsync(checkBox.IsChecked == true);
+
+        // OneWay binding + a failed Task Scheduler call can leave the visual state
+        // out of sync because the VM reverted to the same value it already had.
+        checkBox.IsChecked = viewModel.AutoStartEnabled;
     }
 
     private async void OnSelfieClick(object sender, RoutedEventArgs e)
@@ -31,6 +35,7 @@ public partial class SettingsView : UserControl
         }
 
         await viewModel.SetSelfieAsync(checkBox.IsChecked == true);
+        checkBox.IsChecked = viewModel.SelfieEnabled;
     }
 
     private async void OnWatchdogClick(object sender, RoutedEventArgs e)
@@ -42,5 +47,6 @@ public partial class SettingsView : UserControl
         }
 
         await viewModel.SetWatchdogAsync(checkBox.IsChecked == true);
+        checkBox.IsChecked = viewModel.WatchdogEnabled;
     }
 }

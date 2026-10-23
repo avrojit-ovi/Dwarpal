@@ -1,4 +1,5 @@
 <UserControl x:Class="Dwarpal.App.Controls.PinPad"
+             x:Name="PinPadRoot"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -40,5 +41,10 @@
                     Foreground="{StaticResource MutedBrush}"
                     Click="OnBackspaceClick" />
         </UniformGrid>
+
+        <Button Content="{Binding SubmitText, ElementName=PinPadRoot}"
+                Style="{StaticResource PrimaryButton}"
+                Margin="0,10,0,0"
+                Click="OnSubmitClick" />
     </StackPanel>
 </UserControl>

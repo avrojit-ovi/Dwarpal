@@ -56,8 +56,9 @@ public static class IconLoader
             source.Freeze();
             return source;
         }
-        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (Exception ex)
         {
+            // Icon optional - corrupt/shortcut path er karone lock flow atka jabe na.
             Log.Debug(ex, "Icon extract failed for {Path}", iconPath);
             return null;
         }

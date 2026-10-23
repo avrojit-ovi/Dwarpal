@@ -213,6 +213,7 @@ public partial class ScheduleViewModel : ObservableObject
         {
             Log.Error(ex, "Toggling schedule window failed");
             SetStatus("Update korte parlam na: " + ex.Message, isError: true);
+            await LoadAsync();
         }
     }
 

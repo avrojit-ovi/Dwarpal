@@ -176,7 +176,9 @@ public partial class ProfilesViewModel : ObservableObject
 
             if (AppServices.Protection is not null)
             {
-                await AppServices.Protection.RefreshAsync(lockRunningInstances: true);
+                // Inactive profile edit korle current active app gulo lock hoye jabe na.
+                var activeId = await AppServices.Profiles.GetActiveProfileIdAsync();
+                await AppServices.Protection.RefreshAsync(lockRunningInstances: activeId == profileId);
             }
 
             await LoadAsync();

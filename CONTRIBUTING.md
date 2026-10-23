@@ -21,8 +21,8 @@ dotnet test tests/Dwarpal.Core.Tests/Dwarpal.Core.Tests.csproj
 Build the release assets when needed:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build-installer.ps1 -Version 1.0.0
-powershell -ExecutionPolicy Bypass -File scripts/build-portable.ps1 -Version 1.0.0
+powershell -ExecutionPolicy Bypass -File scripts/build-installer.ps1 -Version 1.0.1
+powershell -ExecutionPolicy Bypass -File scripts/build-portable.ps1 -Version 1.0.1
 ```
 
 ## What to change

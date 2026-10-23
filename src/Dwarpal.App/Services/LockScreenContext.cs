@@ -11,6 +11,6 @@ public sealed record LockAttemptResult(bool Success, string? Error, int LockoutS
 /// </summary>
 public sealed record LockScreenContext(
     ProtectedApp App,
-    int ProcessId,
     ImageSource? Icon,
-    Func<string, Task<LockAttemptResult>> VerifyAsync);
+    Func<string, Task<LockAttemptResult>> VerifyAsync,
+    Func<bool> IsAnyProcessRunning);

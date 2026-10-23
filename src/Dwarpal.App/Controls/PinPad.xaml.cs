@@ -6,12 +6,24 @@ namespace Dwarpal.App.Controls;
 
 public partial class PinPad : UserControl
 {
+    public static readonly DependencyProperty SubmitTextProperty = DependencyProperty.Register(
+        nameof(SubmitText),
+        typeof(string),
+        typeof(PinPad),
+        new PropertyMetadata("Unlock"));
+
     public PinPad()
     {
         InitializeComponent();
 
         SecretBox.KeyDown += OnSecretKeyDown;
         Loaded += (_, _) => SecretBox.Focus();
+    }
+
+    public string SubmitText
+    {
+        get => (string)GetValue(SubmitTextProperty);
+        set => SetValue(SubmitTextProperty, value);
     }
 
     /// <summary>Enter chaple lock window e submit hobe.</summary>
@@ -54,6 +66,12 @@ public partial class PinPad : UserControl
         SecretBox.Password += digit;
         SecretBox.Focus();
         SecretChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnSubmitClick(object sender, RoutedEventArgs e)
+    {
+        Submitted?.Invoke(this, EventArgs.Empty);
+        SecretBox.Focus();
     }
 
     private void OnClearClick(object sender, RoutedEventArgs e)

@@ -28,17 +28,12 @@ public partial class LockScreenWindow : Window
         _viewModel.AppPath = context.App.ExecutablePath;
         _viewModel.AppIcon = context.Icon;
 
-        WindowStartupLocation = WindowStartupLocation.Manual;
-        Left = SystemParameters.VirtualScreenLeft;
-        Top = SystemParameters.VirtualScreenTop;
-        Width = Math.Max(320, SystemParameters.VirtualScreenWidth);
-        Height = Math.Max(240, SystemParameters.VirtualScreenHeight);
-
         BackgroundImage.Source = ScreenSnapshot.CaptureVirtualScreen();
 
         Loaded += OnLoaded;
         Closing += OnClosing;
         PreviewKeyDown += OnPreviewKeyDown;
+        KeyDown += OnWindowKeyDown;
         Closed += (_, _) => _processTimer?.Stop();
 
         _processTimer = new DispatcherTimer(DispatcherPriority.Background)
@@ -59,7 +54,6 @@ public partial class LockScreenWindow : Window
     {
         UiAnimations.FadeIn(this, 180);
         Activate();
-        Topmost = true;
 
         try
         {
@@ -107,6 +101,16 @@ public partial class LockScreenWindow : Window
         }
     }
 
+    private async void OnWindowKeyDown(object sender, KeyEventArgs e)
+    {
+        // Focus kono button/tab e chole gele o physical keyboard er Enter kaj korbe.
+        if (e.Key == Key.Enter && _viewModel.IsPin)
+        {
+            e.Handled = true;
+            await TryUnlockAsync(PinPadControl.Secret);
+        }
+    }
+
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         // App shutdown er somoy close block korle process atke jete pare.
@@ -120,7 +124,7 @@ public partial class LockScreenWindow : Window
 
     private void OnProcessTimerTick(object? sender, EventArgs e)
     {
-        if (ProcessController.IsRunning(_context.ProcessId))
+        if (_context.IsAnyProcessRunning())
         {
             return;
         }
@@ -210,10 +214,14 @@ public partial class LockScreenWindow : Window
                 {
                     _viewModel.Kind = kind.Value;
                 }
+
+                // Recovery successful hole DB lockout clear hoy; local countdown o
+                // clear korte hobe, nahole notun credential diyeo input disabled thake.
+                await _viewModel.Lockout.RefreshAsync();
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Could not refresh credential kind after recovery");
+                Log.Warning(ex, "Could not refresh credential state after recovery");
             }
 
             PinPadControl.Clear();

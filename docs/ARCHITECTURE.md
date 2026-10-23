@@ -61,13 +61,15 @@ flowchart LR
 
 ## Protection lifecycle
 
-1. **Startup.** `App.OnStartup` applies process DACL hardening, registers the panic hotkey, opens the
-   unlock or setup window, and starts `ProtectionEngine` when the dashboard opens. The engine loads
-   enabled apps, the active profile and schedule windows into an in-memory cache.
+1. **Startup.** `App.OnStartup` applies process DACL hardening, registers the panic hotkey, starts
+   `ProtectionEngine` (before the startup gate when a credential already exists) and opens the
+   unlock or setup window. The engine loads enabled apps, the active profile and schedule windows
+   into an in-memory cache.
 2. **Launch detection.** `ProcessStartWatcher` (WMI `Win32_ProcessStartTrace`) reports a process name;
    the engine matches it against the active profile and `ProtectedAppMatcher` (path or process name).
-3. **Lock.** The process is suspended with `NtSuspendProcess`, a full-screen `LockScreenWindow` is
-   shown on the virtual screen, and a `Lock` event is written.
+3. **Lock.** The process is suspended with `NtSuspendProcess`, a compact, taskbar-visible
+   `LockScreenWindow` is shown, and a `Lock` event is written. All processes of the same protected
+   app share one session and one window.
 4. **Verification.** The lock screen calls `LockScreenContext.VerifyAsync`, which delegates to
    `CredentialService.VerifyAsync`. Every attempt is audited; failures increment `LockoutService`.
    On the third failure and each lockout, a selfie is captured, encrypted and linked to the entry.

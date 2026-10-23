@@ -4,6 +4,39 @@ All notable changes to Dwarpal are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [1.0.1] — 2026-10-23
+
+Bug-fix release focused on the lock/unlock and recovery flows.
+
+### Fixed
+
+- **PIN unlock now closes the lock window immediately** and resumes every suspended process in the
+  app's session. The submit button, physical Enter key and Enter from any focused control all work.
+- **Multi-process apps share one lock screen.** Chrome/Discord-style child processes join the
+  existing session instead of opening a new window, and the whole session resumes on unlock.
+- **Lock screen is a compact window again** (520 × 720, normal Z-order, taskbar button) instead of a
+  topmost full-screen overlay, so the taskbar and other apps remain usable while an app is locked.
+- **Recovery reset clears the lockout countdown.** A recovery-key reset now immediately re-enables
+  the credential input instead of leaving the old cooldown timer blocking the new PIN/password.
+- **Protection stays active at the startup gate.** The engine starts before the startup unlock/setup
+  window, and the gate can no longer be closed to bypass protection; Windows shutdown still closes
+  it cleanly.
+- **Auto-start task path is quoted**, so `schtasks /TR` works when Dwarpal is installed under
+  `Program Files`.
+- **Settings toggles revert their visual state** when Task Scheduler or selfie settings fail.
+- **Dashboard active profile** is loaded from the database instead of showing a hard-coded value;
+  protected-app count now reflects enabled apps.
+- **Editing an inactive profile no longer locks running apps** from the active profile.
+- **Optional screen capture and icon extraction can no longer leave a target process suspended** if
+  GDI/icon handling fails while the lock window is being created.
+- **Profile checkbox selection count, picker search selection, schedule/app toggle failures and
+  unlock-screen recovery messages** now reflect their real state.
+
+### Build
+
+- Installer bundles the .NET 8 Desktop Runtime (x64) instead of sending the user to a download page.
+- 87 tests (one new recovery/lockout regression test).
+
 ## [1.0.0] — 2026-10-23
 
 First complete release.
@@ -49,4 +82,5 @@ First complete release.
 - README with architecture, build, installer, portable, manual checks, limitations and a release
   checklist; security policy, contribution guide, architecture notes and release notes.
 
+[1.0.1]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.1
 [1.0.0]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0

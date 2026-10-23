@@ -1,6 +1,7 @@
 ; Dwarpal installer — Inno Setup 6.
-; Build with scripts\build-installer.ps1 (publishes first) or:
-;   ISCC.exe /DAppVersion=1.0.0 installer\Dwarpal.iss
+; Build with scripts\build-installer.ps1 (publishes first and downloads the pinned
+; .NET 8 Desktop Runtime installer) or:
+;   ISCC.exe /DAppVersion=1.0.1 installer\Dwarpal.iss
 
 #define AppName "Dwarpal"
 #define AppPublisher "Dwarpal"
@@ -8,7 +9,13 @@
 #define PublishDir "..\artifacts\publish"
 
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
+#endif
+
+; Kept in sync with scripts\build-installer.ps1. The setup bundles this file so a
+; clean machine can install the prerequisite without a browser or download page.
+#ifndef RuntimeInstaller
+  #define RuntimeInstaller "..\artifacts\prereq\windowsdesktop-runtime-8.0.32-win-x64.exe"
 #endif
 
 [Setup]
@@ -49,7 +56,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Framework-dependent publish output. The .NET 8 Desktop Runtime is checked in [Code].
+; Official Microsoft .NET 8 Desktop Runtime installer. dontcopy keeps it out of
+; {app}; [Code] extracts it to {tmp} only when the runtime is actually missing.
+Source: "{#RuntimeInstaller}"; DestDir: "{tmp}"; Flags: dontcopy
+; Framework-dependent app payload.
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
@@ -70,6 +80,10 @@ const
   DesktopRuntimeKey =
     'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App';
   DesktopRuntimeUrl = 'https://dotnet.microsoft.com/en-us/download/dotnet/8.0';
+  DesktopRuntimeFileName = 'windowsdesktop-runtime-8.0.32-win-x64.exe';
+
+var
+  RuntimePage: TOutputProgressWizardPage;
 
 function HasDesktopRuntimeFolder(): Boolean;
 var
@@ -115,27 +129,105 @@ begin
   Result := HasDesktopRuntimeFolder();
 end;
 
-function InitializeSetup(): Boolean;
-var
-  ErrorCode: Integer;
+procedure InitializeWizard;
 begin
-  Result := True;
+  RuntimePage := CreateOutputProgressPage(
+    'Installing prerequisites',
+    'Dwarpal needs the .NET 8 Desktop Runtime (x64).');
+end;
+
+function InstallDesktopRuntime(var NeedsRestart: Boolean): String;
+var
+  ResultCode, Attempt: Integer;
+  RuntimeInstaller: String;
+begin
+  Result := '';
+
+  if not WizardSilent then
+  begin
+    RuntimePage.SetText(
+      'Installing the .NET 8 Desktop Runtime (x64)...',
+      'This can take a few minutes. The Microsoft installer runs silently.');
+    RuntimePage.SetProgress(0, 100);
+    RuntimePage.Show;
+  end;
+
+  try
+    try
+      ExtractTemporaryFile(DesktopRuntimeFileName);
+      RuntimeInstaller := ExpandConstant('{tmp}\' + DesktopRuntimeFileName);
+
+      if not WizardSilent then
+        RuntimePage.SetProgress(10, 100);
+
+      if not Exec(
+           RuntimeInstaller,
+           '/install /quiet /norestart',
+           '',
+           SW_HIDE,
+           ewWaitUntilTerminated,
+           ResultCode) then
+      begin
+        Result := 'Setup could not start the .NET 8 Desktop Runtime installer. ' +
+          'Install it manually from ' + DesktopRuntimeUrl + ' and then run Setup again.';
+        Exit;
+      end;
+
+      if not WizardSilent then
+        RuntimePage.SetProgress(90, 100);
+
+      if (ResultCode = 3010) or (ResultCode = 1641) then
+        NeedsRestart := True
+      else if ResultCode <> 0 then
+      begin
+        Result := 'The .NET 8 Desktop Runtime installer failed with exit code ' +
+          IntToStr(ResultCode) + '. Install it manually from ' + DesktopRuntimeUrl +
+          ' and then run Setup again.';
+        Exit;
+      end;
+    except
+      Result := 'Setup could not install the .NET 8 Desktop Runtime. ' +
+        'Install it manually from ' + DesktopRuntimeUrl + ' and then run Setup again.';
+      Exit;
+    end;
+  finally
+    if not WizardSilent then
+      RuntimePage.Hide;
+  end;
+
+  // The runtime installer can return before the new runtime is visible to the
+  // registry/folder checks, so poll briefly before declaring failure.
+  for Attempt := 1 to 10 do
+  begin
+    if HasDotNet8DesktopRuntime() then
+      Exit;
+    Sleep(1000);
+  end;
+
+  Result := 'The .NET 8 Desktop Runtime was installed but could not be detected. ' +
+    'Restart Windows and run Setup again.';
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  NeedsRestart := False;
+  Result := '';
 
   if HasDotNet8DesktopRuntime() then
     Exit;
 
-  if WizardSilent then
+  if not WizardSilent then
   begin
-    // Silent deployment: fail clearly instead of prompting on a headless machine.
-    Result := False;
-    Exit;
+    if MsgBox(
+         'Dwarpal needs the .NET 8 Desktop Runtime (x64).' + #13#10#13#10 +
+         'Setup will install it automatically now. This can take a few minutes.' + #13#10#13#10 +
+         'Continue?',
+         mbConfirmation, MB_YESNO) <> IDYES then
+    begin
+      Result := 'Dwarpal cannot be installed without the .NET 8 Desktop Runtime (x64).';
+      Exit;
+    end;
   end;
 
-  if MsgBox(
-       'Dwarpal needs the .NET 8 Desktop Runtime (x64).' + #13#10#13#10 +
-       'Open the Microsoft download page now? Setup will close so you can install the runtime first.',
-       mbConfirmation, MB_YESNO) = IDYES then
-    ShellExec('open', DesktopRuntimeUrl, '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
-
-  Result := False;
+  Result := InstallDesktopRuntime(NeedsRestart);
 end;

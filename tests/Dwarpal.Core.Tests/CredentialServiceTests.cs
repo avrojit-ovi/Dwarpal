@@ -109,6 +109,34 @@ public class CredentialServiceTests
     }
 
     [Fact]
+    public async Task RecoveryReset_ClearsActiveLockout_AndAcceptsNewCredential()
+    {
+        var now = new DateTimeOffset(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+        await using var fixture = await TestDatabase.CreateAsync(() => now);
+        var setup = await fixture.CredentialService.SetupAsync(CredentialKind.Pin, "4821");
+
+        for (var attempt = 0; attempt < LockoutService.DefaultMaxAttempts; attempt++)
+        {
+            await fixture.CredentialService.VerifyAsync("0000", "App unlock");
+        }
+
+        Assert.True((await fixture.Lockout.GetStatusAsync()).IsLockedOut);
+
+        var reset = await fixture.CredentialService.ResetWithRecoveryKeyAsync(
+            setup.RecoveryKey!, CredentialKind.Pin, "6060");
+
+        Assert.True(reset.Success);
+
+        var status = await fixture.Lockout.GetStatusAsync();
+        Assert.False(status.IsLockedOut);
+        Assert.Equal(0, status.FailedAttempts);
+        Assert.Equal(0, status.Strikes);
+
+        // Recovery reset er por notun PIN sathe sathe kaj korbe.
+        Assert.True((await fixture.CredentialService.VerifyAsync("6060", "App unlock")).Success);
+    }
+
+    [Fact]
     public async Task ChangeCredential_RequiresCurrentSecret()
     {
         await using var fixture = await TestDatabase.CreateAsync();

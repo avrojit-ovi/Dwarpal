@@ -61,8 +61,10 @@ public static class ScreenSnapshot
                 DeleteObject(handle);
             }
         }
-        catch (Exception ex) when (ex is ExternalException or ArgumentException or InvalidOperationException or OutOfMemoryException)
+        catch (Exception ex)
         {
+            // Capture optional; RDP/session transition e GDI fail korle lock screen tao
+            // khule hate hobe, tai ekhane kono exception bubble korbe na.
             Log.Debug(ex, "Screen snapshot failed; lock screen will use gradient background");
             return null;
         }

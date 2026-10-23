@@ -60,7 +60,7 @@
                                Style="{StaticResource TitleText}"
                                HorizontalAlignment="Center"
                                Margin="0,16,0,0" />
-                    <TextBlock Text="Installed app list theke bacho, othoba .exe browse koro. Lock kora app open korle Dwarpal full-screen lock screen dekhbe."
+                    <TextBlock Text="Installed app list theke bacho, othoba .exe browse koro. Lock kora app open korle Dwarpal PIN window dekhbe."
                                Style="{StaticResource MutedText}"
                                MaxWidth="420"
                                TextAlignment="Center"

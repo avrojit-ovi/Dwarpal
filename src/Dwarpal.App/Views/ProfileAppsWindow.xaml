@@ -68,8 +68,7 @@
                                         <CheckBox Style="{StaticResource AppCheckBox}"
                                                   Content="Include"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                  Checked="OnSelectionChanged"
-                                                  Unchecked="OnSelectionChanged"
+                                                  Click="OnSelectionChanged"
                                                   HorizontalAlignment="Right"
                                                   VerticalAlignment="Center" />
                                     </Grid>

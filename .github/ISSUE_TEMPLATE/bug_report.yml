@@ -14,7 +14,7 @@ body:
     attributes:
       label: Dwarpal version
       description: Shown in Settings → Security, or the installer filename.
-      placeholder: "1.0.1"
+      placeholder: "1.0.2"
     validations:
       required: true
 

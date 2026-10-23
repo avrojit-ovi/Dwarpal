@@ -12,11 +12,11 @@ Dwarpal is a Windows app locker in the spirit of a phone app locker: pick the pr
 protect, and Dwarpal stands in front of them with a compact lock window, a PIN/password, and an
 audit trail.
 
-**Download v1.0.1:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.1/Dwarpal-Setup-1.0.1.exe)
-· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.1/Dwarpal-1.0.1-portable.zip)
-· [checksums](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.1/SHA256SUMS.txt)
+**Download v1.0.2:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/Dwarpal-Setup-1.0.2.exe)
+· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/Dwarpal-1.0.2-portable.zip)
+· [checksums](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/SHA256SUMS.txt)
 · [all releases](https://github.com/avrojit-ovi/Dwarpal/releases/latest)
-· [release notes](docs/release-notes-1.0.1.md)
+· [release notes](docs/release-notes-1.0.2.md)
 
 **Jump to:** [Requirements](#requirements) · [Build](#build-and-test) ·
 [Installer](#build-the-installer) · [Portable](#build-the-portable-zip) ·
@@ -24,7 +24,7 @@ audit trail.
 [Security design](#security-design-phase-1) · [Roadmap](#roadmap) ·
 [Limitations](#known-limitations-honest-list)
 
-> **Status: v1.0.1 — all planned phases complete.** Credentials, encrypted storage, setup wizard,
+> **Status: v1.0.2 — all planned phases complete.** Credentials, encrypted storage, setup wizard,
 > recovery flow, protected-app selection, WMI process watch, suspend/resume, the compact lock
 > window, auto re-lock, settings, sign-in auto-start, tray/background running, a Task Scheduler
 > watchdog, single-instance enforcement, process DACL hardening, escalating lockout, encrypted
@@ -62,14 +62,14 @@ installer/
   Dwarpal.iss        Inno Setup 6 script (install, shortcuts, uninstall, task cleanup)
   Output/            Local build output (git-ignored)
 dist/
-  Dwarpal-Setup-1.0.1.exe / Dwarpal-1.0.1-portable.zip / SHA256SUMS.txt
+  Dwarpal-Setup-1.0.2.exe / Dwarpal-1.0.2-portable.zip / SHA256SUMS.txt
 scripts/
   build-installer.ps1 / build-portable.ps1
 .github/
   workflows/         CI (push/PR) and tag-triggered packaging
   ISSUE_TEMPLATE/    Bug and feature forms
 docs/
-  ARCHITECTURE.md / release-notes-1.0.1.md / portable-readme.txt
+  ARCHITECTURE.md / release-notes-1.0.2.md / portable-readme.txt
 ```
 
 ## Requirements
@@ -100,18 +100,18 @@ way to run it. Running `dotnet Dwarpal.dll` bypasses the manifest and is not sup
 ## Build the installer
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 -Version 1.0.1
+powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 -Version 1.0.2
 ```
 
 The script publishes a framework-dependent `win-x64` build to `artifacts\publish`, compiles
 `installer\Dwarpal.iss` with Inno Setup 6 and writes
-`installer\Output\Dwarpal-Setup-1.0.1.exe`. If Inno Setup is not on the default path, install it from
+`installer\Output\Dwarpal-Setup-1.0.2.exe`. If Inno Setup is not on the default path, install it from
 [jrsoftware.org](https://jrsoftware.org/isdl.php). `-DotnetPath` can point at a specific `dotnet.exe`.
 
 You can also compile the script directly after publishing:
 
 ```powershell
-ISCC.exe /DAppVersion=1.0.1 installer\Dwarpal.iss
+ISCC.exe /DAppVersion=1.0.2 installer\Dwarpal.iss
 ```
 
 ### What the installer does
@@ -127,16 +127,16 @@ ISCC.exe /DAppVersion=1.0.1 installer\Dwarpal.iss
   they exist. It deliberately **keeps** `%ProgramData%\Dwarpal` (credential hash, settings, activity
   log, selfies) so an uninstall/reinstall does not lose the vault; delete that folder manually to
   wipe it.
-- Silent install for managed machines: `Dwarpal-Setup-1.0.1.exe /VERYSILENT /SUPPRESSMSGBOXES`.
+- Silent install for managed machines: `Dwarpal-Setup-1.0.2.exe /VERYSILENT /SUPPRESSMSGBOXES`.
 
 ## Build the portable ZIP
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.1
+powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.2
 ```
 
-This publishes the same app to `artifacts\portable\Dwarpal-1.0.1-portable` and packages
-`artifacts\Dwarpal-1.0.1-portable.zip` with a `README-portable.txt`. Add `-SelfContained` to bundle
+This publishes the same app to `artifacts\portable\Dwarpal-1.0.2-portable` and packages
+`artifacts\Dwarpal-1.0.2-portable.zip` with a `README-portable.txt`. Add `-SelfContained` to bundle
 the .NET runtime (larger ZIP, no Desktop Runtime prerequisite).
 
 The portable build does **not** make the vault portable: data still lives in
@@ -153,7 +153,7 @@ and is git-ignored.
 (or manually via **workflow_dispatch** with a version input): restore → build → the 87 tests →
 install Inno Setup via Chocolatey → build the installer → build the portable ZIP → generate
 `SHA256SUMS.txt` → upload both artifacts → publish the GitHub release using
-`docs/release-notes-<version>.md`. CI is green on `main`; v1.0.1 is built from this workflow. Add
+`docs/release-notes-<version>.md`. CI is green on `main`; v1.0.2 is built from this workflow. Add
 the release-notes file for a version before tagging it.
 
 ## First run
@@ -206,7 +206,7 @@ runs as `LocalSystem` and must share the same database.
   optionally bundles the runtime.
 - **CI release workflow** (`.github/workflows/release.yml`): tag-triggered Windows build that runs
   the tests, installs Inno Setup, builds both artifacts and attaches them to a GitHub release.
-- **Release artifacts verified locally:** the 1.0.1 setup and portable ZIP are rebuilt from these
+- **Release artifacts verified locally:** the 1.0.2 setup and portable ZIP are rebuilt from these
   sources; both contain the framework-dependent app, and the ZIP contains `Dwarpal.exe`, its
   runtime config and the portable readme.
 - **Final UI consistency pass:** every sidebar page is live (no disabled placeholders left), the
@@ -214,7 +214,7 @@ runs as `LocalSystem` and must share the same database.
   against `Themes/Colors.xaml` / `Themes/Controls.xaml`.
 - **Final documentation:** installer/portable prerequisites, silent-install flags, uninstall
   data-retention behaviour, CI usage, release checklist, an updated limitations list and
-  [`docs/release-notes-1.0.1.md`](docs/release-notes-1.0.1.md).
+  [`docs/release-notes-1.0.2.md`](docs/release-notes-1.0.2.md).
 - **87 unit tests** pass; `dotnet build` is clean with 0 warnings.
 
 ## What Phase 6 delivers
@@ -456,7 +456,7 @@ runs as `LocalSystem` and must share the same database.
 - `Dwarpal.Service` is a heartbeat host and is not installed by the setup. Interactive protection
   runs in the elevated app plus the Task Scheduler watchdog, because session-0 services cannot show
   the lock screen.
-- The published v1.0.1 binaries are unsigned and have only been smoke-tested on the build machine;
+- The published v1.0.2 binaries are unsigned and have only been smoke-tested on the build machine;
   CI builds and tests every push but does not install the package on a clean VM. See *Code signing*
   and the checklist below.
 

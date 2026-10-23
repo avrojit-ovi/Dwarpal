@@ -4,6 +4,14 @@ All notable changes to Dwarpal are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [1.0.2] — 2026-10-23
+
+### Fixed
+
+- **Setup no longer fails with `CreateProcess failed; code 740` after installation.** The post-install
+  entry now inherits Setup's elevated token (`runascurrentuser`) and uses ShellExecute, so Windows
+  honors Dwarpal's `requireAdministrator` manifest and opens the app without a second UAC prompt.
+
 ## [1.0.1] — 2026-10-23
 
 Bug-fix release focused on the lock/unlock and recovery flows.
@@ -82,5 +90,6 @@ First complete release.
 - README with architecture, build, installer, portable, manual checks, limitations and a release
   checklist; security policy, contribution guide, architecture notes and release notes.
 
+[1.0.2]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.2
 [1.0.1]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.1
 [1.0.0]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0

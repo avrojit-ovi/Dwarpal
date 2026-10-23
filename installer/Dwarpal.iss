@@ -1,7 +1,7 @@
 ; Dwarpal installer — Inno Setup 6.
 ; Build with scripts\build-installer.ps1 (publishes first and downloads the pinned
 ; .NET 8 Desktop Runtime installer) or:
-;   ISCC.exe /DAppVersion=1.0.1 installer\Dwarpal.iss
+;   ISCC.exe /DAppVersion=1.0.2 installer\Dwarpal.iss
 
 #define AppName "Dwarpal"
 #define AppPublisher "Dwarpal"
@@ -9,7 +9,7 @@
 #define PublishDir "..\artifacts\publish"
 
 #ifndef AppVersion
-  #define AppVersion "1.0.1"
+  #define AppVersion "1.0.2"
 #endif
 
 ; Kept in sync with scripts\build-installer.ps1. The setup bundles this file so a
@@ -68,7 +68,10 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+; postinstall entries default to the original (non-elevated) user, so CreateProcess
+; failed with error 740 for Dwarpal's requireAdministrator manifest. Inherit Setup's
+; elevated token and use ShellExecute so the app starts without a second UAC prompt.
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent runascurrentuser shellexec
 
 [UninstallRun]
 ; Dwarpal creates these Task Scheduler entries when the user enables auto-start / watchdog.

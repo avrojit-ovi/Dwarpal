@@ -12,11 +12,11 @@ Dwarpal is a Windows app locker in the spirit of a phone app locker: pick the pr
 protect, and Dwarpal stands in front of them with a compact lock window, a PIN/password, and an
 audit trail.
 
-**Download v1.0.2:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/Dwarpal-Setup-1.0.2.exe)
-· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/Dwarpal-1.0.2-portable.zip)
-· [checksums](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.2/SHA256SUMS.txt)
+**Download v1.0.3:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.3/Dwarpal-Setup-1.0.3.exe)
+· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.3/Dwarpal-1.0.3-portable.zip)
+· [checksums](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.3/SHA256SUMS.txt)
 · [all releases](https://github.com/avrojit-ovi/Dwarpal/releases/latest)
-· [release notes](docs/release-notes-1.0.2.md)
+· [release notes](docs/release-notes-1.0.3.md)
 
 **Jump to:** [Requirements](#requirements) · [Build](#build-and-test) ·
 [Installer](#build-the-installer) · [Portable](#build-the-portable-zip) ·
@@ -24,7 +24,7 @@ audit trail.
 [Security design](#security-design-phase-1) · [Roadmap](#roadmap) ·
 [Limitations](#known-limitations-honest-list)
 
-> **Status: v1.0.2 — all planned phases complete.** Credentials, encrypted storage, setup wizard,
+> **Status: v1.0.3 — all planned phases complete.** Credentials, encrypted storage, setup wizard,
 > recovery flow, protected-app selection, WMI process watch, suspend/resume, the compact lock
 > window, auto re-lock, settings, sign-in auto-start, tray/background running, a Task Scheduler
 > watchdog, single-instance enforcement, process DACL hardening, escalating lockout, encrypted

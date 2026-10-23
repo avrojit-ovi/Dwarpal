@@ -10,10 +10,10 @@
     both values together when servicing the runtime.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 -Version 1.0.2
+    powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 -Version 1.0.3
 #>
 param(
-    [string]$Version = "1.0.2",
+    [string]$Version = "1.0.3",
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
     [string]$DotnetPath = "dotnet",

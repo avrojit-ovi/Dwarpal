@@ -4,6 +4,27 @@ All notable changes to Dwarpal are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/).
 
+## [1.0.3] — 2026-10-23
+
+Bug-fix round driven by live testing of the running app (probe-verified red/green).
+
+### Fixed
+
+- **System apps like File Explorer can now be locked.** Always-running apps never fire
+  process-start events (opening a File Explorer window reuses the shell process), so the engine
+  never locked them. The engine now also locks a protected app when it comes to the foreground
+  with no lock or in-use session; unlocked apps stay usable until their auto re-lock timeout.
+- **Tray Exit always shows the credential prompt.** The confirmation window is now topmost,
+  centered on screen and activated on open, so it can no longer be buried behind other windows
+  (or a lock screen) where "Exit" looked like it skipped the password.
+- **The lock window stays above the app it guards** (`Topmost`). This deliberately changes the
+  1.0.1 normal Z-order decision: a covered lock window made locked apps look usable and unlocked.
+  The window is still compact (520 × 720), so the taskbar and other apps remain usable.
+- **Engine disposal no longer double-resumes** locked processes (and no longer writes a bogus
+  "Resumed" activity entry while shutting down).
+- **Adding a protected app no longer reports failure** when only the post-add lock refresh failed;
+  the app is saved and the error is logged instead.
+
 ## [1.0.2] — 2026-10-23
 
 ### Fixed
@@ -90,6 +111,7 @@ First complete release.
 - README with architecture, build, installer, portable, manual checks, limitations and a release
   checklist; security policy, contribution guide, architecture notes and release notes.
 
+[1.0.3]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.3
 [1.0.2]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.2
 [1.0.1]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.1
 [1.0.0]: https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0

@@ -14,7 +14,7 @@
     <ApplicationIcon>Assets\Branding\dwarpal.ico</ApplicationIcon>
     <!-- WFAC010: WPF app er jonno DPI awareness manifest e thakai correct; WinForms analyzer false positive. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Dwarpal</Authors>
     <Product>Dwarpal</Product>
   </PropertyGroup>

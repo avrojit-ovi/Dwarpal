@@ -1,7 +1,7 @@
 ; Dwarpal installer — Inno Setup 6.
 ; Build with scripts\build-installer.ps1 (publishes first and downloads the pinned
 ; .NET 8 Desktop Runtime installer) or:
-;   ISCC.exe /DAppVersion=1.0.2 installer\Dwarpal.iss
+;   ISCC.exe /DAppVersion=1.0.3 installer\Dwarpal.iss
 
 #define AppName "Dwarpal"
 #define AppPublisher "Dwarpal"
@@ -9,7 +9,7 @@
 #define PublishDir "..\artifacts\publish"
 
 #ifndef AppVersion
-  #define AppVersion "1.0.2"
+  #define AppVersion "1.0.3"
 #endif
 
 ; Kept in sync with scripts\build-installer.ps1. The setup bundles this file so a

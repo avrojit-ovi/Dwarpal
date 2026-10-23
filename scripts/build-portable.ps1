@@ -4,13 +4,13 @@
     Publishes Dwarpal and packages a portable (no-installer) ZIP.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.2
+    powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.3
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.2 -SelfContained
+    powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version 1.0.3 -SelfContained
 #>
 param(
-    [string]$Version = "1.0.2",
+    [string]$Version = "1.0.3",
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
     [switch]$SelfContained,

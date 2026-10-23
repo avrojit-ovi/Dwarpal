@@ -61,6 +61,24 @@ jobs:
         shell: pwsh
         run: ./scripts/build-portable.ps1 -Version "${{ steps.version.outputs.value }}" -DotnetPath "dotnet"
 
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          $files = @()
+          $files += Get-ChildItem "installer/Output/Dwarpal-Setup-*.exe"
+          $files += Get-ChildItem "artifacts/Dwarpal-*-portable.zip"
+
+          if ($files.Count -ne 2) {
+            throw "Expected exactly two release artifacts, found $($files.Count)."
+          }
+
+          $lines = foreach ($file in $files) {
+            "{0}  {1}" -f (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower(), $file.Name
+          }
+
+          $lines | Set-Content -Path "installer/Output/SHA256SUMS.txt" -Encoding ascii
+          Get-Content "installer/Output/SHA256SUMS.txt"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -68,6 +86,7 @@ jobs:
           if-no-files-found: error
           path: |
             installer/Output/Dwarpal-Setup-*.exe
+            installer/Output/SHA256SUMS.txt
             artifacts/Dwarpal-*-portable.zip
 
       - name: Publish GitHub release
@@ -75,7 +94,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Dwarpal ${{ steps.version.outputs.value }}
-          generate_release_notes: true
+          body_path: docs/release-notes-${{ steps.version.outputs.value }}.md
           files: |
             installer/Output/Dwarpal-Setup-*.exe
+            installer/Output/SHA256SUMS.txt
             artifacts/Dwarpal-*-portable.zip

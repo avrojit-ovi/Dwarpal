@@ -12,9 +12,11 @@ Dwarpal is a Windows app locker in the spirit of a phone app locker: pick the pr
 protect, and Dwarpal stands in front of them with a full-screen lock screen, a PIN/password, and an
 audit trail.
 
-**Download:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/latest/download/Dwarpal-Setup-1.0.0.exe)
-· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/latest/download/Dwarpal-1.0.0-portable.zip)
-· [checksums](dist/SHA256SUMS.txt) · [release notes](docs/release-notes-1.0.0.md)
+**Download v1.0.0:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.0/Dwarpal-Setup-1.0.0.exe)
+· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.0/Dwarpal-1.0.0-portable.zip)
+· [checksums](https://github.com/avrojit-ovi/Dwarpal/releases/download/v1.0.0/SHA256SUMS.txt)
+· [all releases](https://github.com/avrojit-ovi/Dwarpal/releases/latest)
+· [release notes](docs/release-notes-1.0.0.md)
 
 **Jump to:** [Requirements](#requirements) · [Build](#build-and-test) ·
 [Installer](#build-the-installer) · [Portable](#build-the-portable-zip) ·
@@ -149,9 +151,11 @@ and is git-ignored.
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) runs on Windows for every `v*` tag
 (or manually via **workflow_dispatch** with a version input): restore → build → the 86 tests →
-install Inno Setup via Chocolatey → build the installer → build the portable ZIP → upload both
-artifacts → create the GitHub release with generated notes. The workflow needs the repository to be
-pushed and Actions enabled; nothing was published from this workspace.
+install Inno Setup via Chocolatey → build the installer → build the portable ZIP → generate
+`SHA256SUMS.txt` → upload both artifacts → publish the GitHub release using
+`docs/release-notes-<version>.md`. CI is green on `main`, and this workflow produced the published
+[v1.0.0 release](https://github.com/avrojit-ovi/Dwarpal/releases/tag/v1.0.0). Add the release-notes
+file for a version before tagging it.
 
 ## First run
 
@@ -203,8 +207,8 @@ runs as `LocalSystem` and must share the same database.
   optionally bundles the runtime.
 - **CI release workflow** (`.github/workflows/release.yml`): tag-triggered Windows build that runs
   the tests, installs Inno Setup, builds both artifacts and attaches them to a GitHub release.
-- **Artifacts verified in this workspace:** `installer/Output/Dwarpal-Setup-1.0.0.exe` (7.3 MiB,
-  framework-dependent) and `artifacts/Dwarpal-1.0.0-portable.zip` (8.1 MB, 19 files) were built
+- **Release artifacts verified locally:** `installer/Output/Dwarpal-Setup-1.0.0.exe` (7.3 MiB,
+  framework-dependent) and `artifacts/Dwarpal-1.0.0-portable.zip` (8.4 MiB, 19 files) were built
   successfully; the ZIP contains `Dwarpal.exe`, its runtime config and the portable readme.
 - **Final UI consistency pass:** every sidebar page is live (no disabled placeholders left), the
   unused disabled-nav style is gone, and all theme resources used by the new pages were checked
@@ -453,9 +457,9 @@ runs as `LocalSystem` and must share the same database.
 - `Dwarpal.Service` is a heartbeat host and is not installed by the setup. Interactive protection
   runs in the elevated app plus the Task Scheduler watchdog, because session-0 services cannot show
   the lock screen.
-- No GitHub release has been published from this workspace: the checkout has no remote configured
-  and no commits yet. Release notes and the checklist below are ready for when the repository is
-  pushed.
+- The published v1.0.0 binaries are unsigned and have only been smoke-tested on the build machine;
+  CI builds and tests every push but does not install the package on a clean VM. See *Code signing*
+  and the checklist below.
 
 ## Release checklist
 
@@ -471,9 +475,10 @@ runs as `LocalSystem` and must share the same database.
 6. Smoke-test install, first-run setup, unlock, profile switch, schedule window, panic hotkey and
    uninstall on a clean x64 VM with the .NET 8 Desktop Runtime. Repeat from the portable ZIP.
 7. Sign `Dwarpal.exe` and the setup (see *Code signing*), then re-hash.
-8. Commit, tag `v<version>` and push to a remote you control. The tag runs
-   `.github/workflows/release.yml`, which builds and attaches the installer and portable ZIP to the
-   GitHub release; the workflow itself needs Actions enabled and `contents: write` (already set).
+8. Add `docs/release-notes-<version>.md`, commit, tag `v<version>` and push to `origin`. The tag
+   runs `.github/workflows/release.yml`, which tests the solution, rebuilds both artifacts,
+   generates `SHA256SUMS.txt` and publishes the GitHub release from the versioned notes. When code
+   signing is added, sign inside that workflow before the artifacts are uploaded.
 
 ## Branding assets
 

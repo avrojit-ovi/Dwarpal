@@ -60,9 +60,10 @@ choose with a full-screen lock screen, a PIN or password, and an audit trail.
 - `dotnet build Dwarpal.sln`: 0 warnings, 0 errors.
 - `dotnet test tests/Dwarpal.Core.Tests/...`: **86 passed, 0 failed**.
 - `installer/Output/Dwarpal-Setup-1.0.0.exe` compiled successfully with Inno Setup 6 (7.3 MiB).
-- `artifacts/Dwarpal-1.0.0-portable.zip` built successfully (8.1 MB, 19 files) and was verified to
+- `artifacts/Dwarpal-1.0.0-portable.zip` built successfully (8.4 MiB, 19 files) and was verified to
   contain `Dwarpal.exe`, its runtime config and `README-portable.txt`.
-- The CI workflow could not be executed here (no remote/Actions); its YAML was reviewed manually.
+- CI is green on `main` (build + 86 tests), and the tag-triggered packaging workflow completed on
+  Windows and uploaded the installer, portable ZIP and `SHA256SUMS.txt` to this release.
 - Manual UI checks are listed per phase in the README; they require an interactive elevated session
   (lock screen, camera, hotkey, tray) and were not run headless here.
 

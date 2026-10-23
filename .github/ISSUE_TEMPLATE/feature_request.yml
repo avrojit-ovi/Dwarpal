@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest an improvement for Dwarpal
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the problem first, then the smallest behaviour that would solve it. Large features
+        should start as a discussion in the issue before code is written.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Lock screen / credentials
+        - Protected apps / matching
+        - Auto re-lock / schedules
+        - Profiles
+        - Activity log / audit
+        - Installer / packaging
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard, unsafe or missing today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behaviour you expect, including edge cases.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or smaller options you have tried.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and the README limitations before posting.
+          required: true
+        - label: This is not a security vulnerability (those go through the private advisory link).
+          required: true

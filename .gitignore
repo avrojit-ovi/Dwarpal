@@ -29,9 +29,8 @@ coverage/
 packages/
 .nuget/
 
-# Inno Setup output: only the built setup executable is tracked in git
-installer/Output/*
-!installer/Output/*.exe
+# Inno Setup build output (versioned release copies are tracked in dist/)
+installer/Output/
 *.msi
 
 # Local probe/verification harnesses (not part of the product)

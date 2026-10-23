@@ -1,0 +1,2 @@
+70112ccded38c635a5d8b286eaeaabe213a2abc98e66974a030126965f38b346 *Dwarpal-Setup-1.0.0.exe
+dec943ebdbe43308eb77051ea0d73f86e98844d91b5d21bb99ebba41cb913de1 *Dwarpal-1.0.0-portable.zip

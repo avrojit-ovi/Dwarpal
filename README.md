@@ -1,10 +1,26 @@
 # Dwarpal — Windows App Locker
 
+[![CI](https://github.com/avrojit-ovi/Dwarpal/actions/workflows/ci.yml/badge.svg)](https://github.com/avrojit-ovi/Dwarpal/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/avrojit-ovi/Dwarpal?sort=semver)](https://github.com/avrojit-ovi/Dwarpal/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0b1f33)](#requirements)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](#requirements)
+[![License](https://img.shields.io/badge/license-Proprietary-lightgrey)](LICENSE)
+
 <img src="src/Dwarpal.App/Assets/Branding/dwarpal-logo-512.png" width="220" alt="Dwarpal logo — navy shield, gold torana and padlock">
 
 Dwarpal is a Windows app locker in the spirit of a phone app locker: pick the programs you want to
 protect, and Dwarpal stands in front of them with a full-screen lock screen, a PIN/password, and an
 audit trail.
+
+**Download:** [installer](https://github.com/avrojit-ovi/Dwarpal/releases/latest/download/Dwarpal-Setup-1.0.0.exe)
+· [portable ZIP](https://github.com/avrojit-ovi/Dwarpal/releases/latest/download/Dwarpal-1.0.0-portable.zip)
+· [checksums](dist/SHA256SUMS.txt) · [release notes](docs/release-notes-1.0.0.md)
+
+**Jump to:** [Requirements](#requirements) · [Build](#build-and-test) ·
+[Installer](#build-the-installer) · [Portable](#build-the-portable-zip) ·
+[First run](#first-run) · [Architecture](docs/ARCHITECTURE.md) ·
+[Security design](#security-design-phase-1) · [Roadmap](#roadmap) ·
+[Limitations](#known-limitations-honest-list)
 
 > **Status: v1.0.0 — all planned phases complete.** Credentials, encrypted storage, setup wizard,
 > recovery flow, protected-app selection, WMI process watch, suspend/resume, the full-screen lock
@@ -42,11 +58,16 @@ tests/
   Dwarpal.Core.Tests/ xUnit tests for hashing, policy, recovery, database, profiles, schedules
 installer/
   Dwarpal.iss        Inno Setup 6 script (install, shortcuts, uninstall, task cleanup)
-  Output/            Built Dwarpal-Setup-<version>.exe (git-ignored)
+  Output/            Local build output (git-ignored)
+dist/
+  Dwarpal-Setup-1.0.0.exe / Dwarpal-1.0.0-portable.zip / SHA256SUMS.txt
 scripts/
-  build-installer.ps1  publish + ISCC build script
+  build-installer.ps1 / build-portable.ps1
+.github/
+  workflows/         CI (push/PR) and tag-triggered packaging
+  ISSUE_TEMPLATE/    Bug and feature forms
 docs/
-  release-notes-1.0.0.md
+  ARCHITECTURE.md / release-notes-1.0.0.md / portable-readme.txt
 ```
 
 ## Requirements
@@ -119,6 +140,10 @@ the .NET runtime (larger ZIP, no Desktop Runtime prerequisite).
 The portable build does **not** make the vault portable: data still lives in
 `%ProgramData%\Dwarpal`. The bundled readme explains how to remove it and how to clean up the
 scheduled tasks after moving the folder.
+
+Versioned release copies are committed in [`dist/`](dist/) with `SHA256SUMS.txt`, so the repository
+is usable without downloading a release. Build output stays in `installer/Output` and `artifacts/`
+and is git-ignored.
 
 ## Continuous integration
 
@@ -441,10 +466,12 @@ runs as `LocalSystem` and must share the same database.
    record the SHA-256 of `installer\Output\Dwarpal-Setup-<version>.exe`.
 4. `powershell -ExecutionPolicy Bypass -File scripts\build-portable.ps1 -Version <version>` and
    record the SHA-256 of `artifacts\Dwarpal-<version>-portable.zip`.
-5. Smoke-test install, first-run setup, unlock, profile switch, schedule window, panic hotkey and
+5. Copy both artifacts into `dist/`, refresh `dist/SHA256SUMS.txt`
+   (`cd dist && sha256sum *.exe *.zip > SHA256SUMS.txt`) and update `dist/README.md` for the version.
+6. Smoke-test install, first-run setup, unlock, profile switch, schedule window, panic hotkey and
    uninstall on a clean x64 VM with the .NET 8 Desktop Runtime. Repeat from the portable ZIP.
-6. Sign `Dwarpal.exe` and the setup (see *Code signing*), then re-hash.
-7. Commit, tag `v<version>` and push to a remote you control. The tag runs
+7. Sign `Dwarpal.exe` and the setup (see *Code signing*), then re-hash.
+8. Commit, tag `v<version>` and push to a remote you control. The tag runs
    `.github/workflows/release.yml`, which builds and attaches the installer and portable ZIP to the
    GitHub release; the workflow itself needs Actions enabled and `contents: write` (already set).
 
@@ -465,6 +492,14 @@ with an *Application Control policy* error. Options for distribution: sign with 
 code-signing certificate (and build reputation), or use a machine where Smart App Control is off.
 Do not disable Smart App Control casually: Windows cannot re-enable it without a reset.
 
+## Project
+
+- [Contributing](CONTRIBUTING.md) — build, style and pull-request expectations.
+- [Security policy](SECURITY.md) — private vulnerability reporting and scope.
+- [Architecture](docs/ARCHITECTURE.md) — components, lifecycle, data model and threat boundaries.
+- [Changelog](CHANGELOG.md) — release history.
+
 ## License
 
-Proprietary — personal project. Add a license before distributing.
+Proprietary. Copyright © 2026 Avrojit Chowdhury. All rights reserved; see [LICENSE](LICENSE) for the
+full terms. For licensing enquiries, contact the repository owner.

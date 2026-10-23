@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/avrojit-ovi/Dwarpal/security/advisories/new
+    about: Private disclosure for credential bypasses, privilege issues and other vulnerabilities.
+  - name: Read the documentation
+    url: https://github.com/avrojit-ovi/Dwarpal#readme
+    about: Build, installer, portable build, manual checks and known limitations.
+  - name: Download the latest release
+    url: https://github.com/avrojit-ovi/Dwarpal/releases/latest
+    about: Installer and portable ZIP with checksums.
